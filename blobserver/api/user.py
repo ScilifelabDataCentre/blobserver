@@ -4,8 +4,8 @@ import http.client
 
 import flask
 
-import webapp.user
-from webapp import utils
+import blobserver.user
+from blobserver import utils
 
 
 blueprint = flask.Blueprint("api_user", __name__)
@@ -14,16 +14,16 @@ blueprint = flask.Blueprint("api_user", __name__)
 def all():
     if not flask.g.am_admin:
         flask.abort(http.client.FORBIDDEN)
-    users = [get_user_basic(u) for u in webapp.user.get_users()]
+    users = [get_user_basic(u) for u in blobserver.user.get_users()]
     return utils.jsonify(utils.get_json(users=users),
                          schema_url=utils.url_for("api_schema.users"))
 
 @blueprint.route("/<identifier:username>")
 def display(username):
-    user = webapp.user.get_user(username=username)
+    user = blobserver.user.get_user(username=username)
     if not user:
         flask.abort(http.client.NOT_FOUND)
-    if not webapp.user.am_admin_or_self(user):
+    if not blobserver.user.am_admin_or_self(user):
         flask.abort(http.client.FORBIDDEN)
     user.pop("password", None)
     user.pop("apikey", None)
@@ -33,10 +33,10 @@ def display(username):
 
 @blueprint.route("/<identifier:username>/logs")
 def logs(username):
-    user = webapp.user.get_user(username=username)
+    user = blobserver.user.get_user(username=username)
     if not user:
         flask.abort(http.client.NOT_FOUND)
-    if not webapp.user.am_admin_or_self(user):
+    if not blobserver.user.am_admin_or_self(user):
         flask.abort(http.client.FORBIDDEN)
     return utils.jsonify(utils.get_json(user=get_user_basic(user),
                                         logs=utils.get_logs(user["_id"])),

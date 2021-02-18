@@ -14,7 +14,7 @@ import flask_mail
 import jinja2.utils
 import werkzeug.routing
 
-from webapp import constants
+from blobserver import constants
 
 def init(app):
     """Initialize app.
@@ -27,14 +27,14 @@ def init(app):
     with db:
         db.execute("CREATE TABLE IF NOT EXISTS logs"
                    "(iuid TEXT PRIMARY KEY,"
-                   " docid TEXT NOT NULL,"
+                   " filename TEXT NOT NULL,"
                    " diff TEXT NOT NULL,"
                    " username TEXT,"
                    " remote_addr TEXT,"
                    " user_agent TEXT,"
                    " timestamp TEXT NOT NULL)")
         db.execute("CREATE INDEX IF NOT EXISTS"
-                   " logs_docid_index ON logs (docid)")
+                   " logs_filename_index ON logs (filename)")
 
 # Global logger instance.
 _logger = None
@@ -233,12 +233,6 @@ def get_json(**data):
     "Return the JSON structure after fixing up for external representation."
     result = {"$id": flask.request.url,
               "timestamp": get_time()}
-    try:
-        result["iuid"] = data.pop("_id")
-    except KeyError:
-        pass
-    data.pop("_rev", None)
-    data.pop("doctype", None)
     result.update(data)
     return result
 
@@ -258,15 +252,14 @@ def get_db(app=None):
     db.row_factory = sqlite3.Row
     return db
 
-def get_logs(docid):
-    """Return the list of log entries for the given document identifier,
+def get_logs(filename):
+    """Return the list of log entries for the given filename,
     sorted by reverse timestamp.
     """
     cursor = flask.g.db.cursor()
-    cursor.execute("SELECT diff, username,"
-                   " remote_addr, user_agent, timestamp"
-                   " FROM logs WHERE docid=?"
-                   " ORDER BY timestamp DESC", (docid,))
+    cursor.execute("SELECT diff, username, remote_addr, user_agent, timestamp"
+                   " FROM logs WHERE filename=?"
+                   " ORDER BY timestamp DESC", (filename,))
     result = []
     for row in cursor:
         item = dict(zip(row.keys(), row))

@@ -1,21 +1,22 @@
-"Web app template."
+"Web app to upload and serve blobs (files)."
 
 import flask
 import jinja2.utils
 
-import webapp.about
-import webapp.config
-import webapp.user
-import webapp.site
-# To be developed.
-# import webapp.entity
+import blobserver.about
+import blobserver.config
+import blobserver.user
+import blobserver.site
+import blobserver.blob
 
-import webapp.api.about
-import webapp.api.root
-import webapp.api.schema
-import webapp.api.user
-from webapp import constants
-from webapp import utils
+import blobserver.api.about
+import blobserver.api.root
+import blobserver.api.schema
+import blobserver.api.user
+# XXX To be developed.
+# import blobserver.api.blob
+from blobserver import constants
+from blobserver import utils
 
 app = flask.Flask(__name__)
 
@@ -24,9 +25,10 @@ app.url_map.converters["identifier"] = utils.IdentifierConverter
 app.url_map.converters["iuid"] = utils.IuidConverter
 
 # Get the configuration, and initialize modules (database).
-webapp.config.init(app)
+blobserver.config.init(app)
 utils.init(app)
-webapp.user.init(app)
+blobserver.user.init(app)
+blobserver.blob.init(app)
 utils.mail.init_app(app)
 
 @app.context_processor
@@ -39,7 +41,7 @@ def setup_template_context():
 def prepare():
     "Open the database connection; get the current user."
     flask.g.db = utils.get_db()
-    flask.g.current_user = webapp.user.get_current_user()
+    flask.g.current_user = blobserver.user.get_current_user()
     flask.g.am_admin = flask.g.current_user and \
                        flask.g.current_user["role"] == constants.ADMIN
 
@@ -71,18 +73,17 @@ def debug():
     return jinja2.utils.Markup("\n".join(result))
 
 # Set up the URL map.
-app.register_blueprint(webapp.about.blueprint, url_prefix="/about")
-app.register_blueprint(webapp.user.blueprint, url_prefix="/user")
-app.register_blueprint(webapp.site.blueprint, url_prefix="/site")
-# To be developed.
-# app.register_blueprint(webapp.entity.blueprint, url_prefix="/entity")
+app.register_blueprint(blobserver.about.blueprint, url_prefix="/about")
+app.register_blueprint(blobserver.user.blueprint, url_prefix="/user")
+app.register_blueprint(blobserver.site.blueprint, url_prefix="/site")
+app.register_blueprint(blobserver.blob.blueprint, url_prefix="/blob")
 
-app.register_blueprint(webapp.api.root.blueprint, url_prefix="/api")
-app.register_blueprint(webapp.api.about.blueprint, url_prefix="/api/about")
-app.register_blueprint(webapp.api.schema.blueprint, url_prefix="/api/schema")
-app.register_blueprint(webapp.api.user.blueprint, url_prefix="/api/user")
-# To be developed
-# app.register_blueprint(webapp.api.entity.blueprint, url_prefix="/api/entity")
+app.register_blueprint(blobserver.api.root.blueprint, url_prefix="/api")
+app.register_blueprint(blobserver.api.about.blueprint, url_prefix="/api/about")
+app.register_blueprint(blobserver.api.schema.blueprint, url_prefix="/api/schema")
+app.register_blueprint(blobserver.api.user.blueprint, url_prefix="/api/user")
+# XXX To be developed.
+# app.register_blueprint(blobserver.api.blob.blueprint, url_prefix="/api/blob")
 
 
 # This code is used only during development.

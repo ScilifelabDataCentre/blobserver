@@ -3,21 +3,21 @@
 import os
 import os.path
 
-from webapp import constants
-from webapp import utils
+from blobserver import constants
+from blobserver import utils
 
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "127.0.0.1:5003",
-    SITE_NAME = "webapp-sqlite3",
+    SERVER_NAME = "127.0.0.1:5009",
+    SITE_NAME = "blobserver",
     SITE_STATIC_DIRPATH = None,
     SITE_ICON = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
     SITE_LOGO = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
     DEBUG = False,
     LOG_DEBUG = False,
-    LOG_NAME = "webapp",
+    LOG_NAME = "blobserver",
     LOG_FILEPATH = None,
     LOG_ROTATING = 0,           # Number of backup rotated log files, if any.
     LOG_FORMAT = "%(levelname)-10s %(asctime)s %(message)s",
@@ -26,7 +26,8 @@ DEFAULT_SETTINGS = dict(
     HOST_URL = None,
     SECRET_KEY = None,          # Must be set in 'settings.json'
     SALT_LENGTH = 12,
-    SQLITE3_FILEPATH = '../site/webapp-data.sqlite3',
+    STORAGE_DIRPATH = None,     # Must be set in 'settings.json'
+    SQLITE3_FILEPATH = None,    # Must be set in 'settings.json'
     JSON_AS_ASCII = False,
     JSON_SORT_KEYS = False,
     JSONIFY_PRETTYPRINT_REGULAR = False,
@@ -49,6 +50,7 @@ def init(app):
     """
     # Set the defaults specified above.
     app.config.from_mapping(DEFAULT_SETTINGS)
+
     # Modify the configuration from a JSON settings file.
     try:
         filepaths = [os.environ["SETTINGS_FILEPATH"]]
@@ -64,6 +66,7 @@ def init(app):
         else:
             app.config["SETTINGS_FILE"] = filepath
             break
+
     # Modify the configuration from environment variables.
     for key, convert in [("DEBUG", utils.to_bool),
                          ("SECRET_KEY", str),
@@ -79,7 +82,21 @@ def init(app):
             app.config[key] = convert(os.environ[key])
         except (KeyError, TypeError, ValueError):
             pass
+
+    # Clean up filepaths.
+    for key in ["SITE_STATIC_DIRPATH", "LOG_FILEPATH",
+                "SQLITE3_FILEPATH", "STORAGE_DIRPATH"]:
+        path = app.config[key]
+        if not path: continue
+        path = os.path.expanduser(path)
+        path = os.path.expandvars(path)
+        path = os.path.normpath(path)
+        path = os.path.abspath(path)
+        app.config[key] = path
+
     # Sanity check; should not execute if this fails.
     assert app.config["SECRET_KEY"]
     assert app.config["SALT_LENGTH"] > 6
     assert app.config["MIN_PASSWORD_LENGTH"] > 4
+    assert app.config["SQLITE3_FILEPATH"]
+    assert app.config["STORAGE_DIRPATH"]

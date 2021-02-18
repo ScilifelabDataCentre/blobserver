@@ -2,7 +2,7 @@
 
 import flask
 
-from webapp import constants
+from blobserver import constants
 
 
 _USERNAME = {"type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"}

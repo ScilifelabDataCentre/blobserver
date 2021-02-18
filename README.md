@@ -1,6 +1,6 @@
-# webapp-flask-couchdb-template
+# blobserver
 
-A template for a web app based on Flask and CouchDB with user account handling.
+Simple web app to server blobs (files) publicly. A file can be
+uploaded by an authorized account.
 
-Uses Python3, Flask, CouchDB server, CouchDB2 (Python module), jsonschema,
-Bootstrap, jQuery, DataTables.
+Uses Python3, Flask, jsonschema, Bootstrap, jQuery, DataTables.

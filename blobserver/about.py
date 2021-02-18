@@ -6,9 +6,9 @@ import sys
 import flask
 import jsonschema
 
-import webapp
-from webapp import constants
-from webapp import utils
+import blobserver
+from blobserver import constants
+from blobserver import utils
 
 
 blueprint = flask.Blueprint("about", __name__)
@@ -22,7 +22,7 @@ def software():
 def get_software():
     v = sys.version_info
     return [
-        (constants.SOURCE_NAME, webapp.__version__, constants.SOURCE_URL),
+        (constants.SOURCE_NAME, blobserver.__version__, constants.SOURCE_URL),
         ("Python", f"{v.major}.{v.minor}.{v.micro}", "https://www.python.org/"),
         ("Flask", flask.__version__, "http://flask.pocoo.org/"),
         ("Sqlite3", sqlite3.version, "https://www.sqlite.org/index.html"),

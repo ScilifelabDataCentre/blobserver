@@ -2,12 +2,12 @@
 
 import re
 
-__version__ = "0.3.3"
+__version__ = "0.1.0"
 
 class Constants:
     VERSION     = __version__
-    SOURCE_NAME = "webapp-sqlite3"
-    SOURCE_URL  = "https://github.com/pekrau/webapp-flask-sqlite3-template"
+    SOURCE_NAME = "blobserver"
+    SOURCE_URL  = "https://github.com/pekrau/blobserver"
 
     BOOTSTRAP_VERSION  = "4.6.0"
     JQUERY_VERSION     = "3.5.1"

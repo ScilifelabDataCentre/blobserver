@@ -8,9 +8,9 @@ import flask
 import flask_mail
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from webapp import constants
-from webapp import utils
-from webapp.saver import BaseSaver
+from blobserver import constants
+from blobserver import utils
+from blobserver.saver import BaseSaver
 
 KEYS = ["iuid", "username", "email", "role", "status",
         "password", "apikey", "created", "modified"]

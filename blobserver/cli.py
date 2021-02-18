@@ -6,18 +6,18 @@ import sys
 
 import flask
 
-import webapp.app
-import webapp.user
+import blobserver.app
+import blobserver.user
 
-from webapp import constants
-from webapp import utils
+from blobserver import constants
+from blobserver import utils
 
 
 def get_parser():
     "Get the parser for the command line interface."
     p = argparse.ArgumentParser(prog="cli.py",
                                 usage="python %(prog)s [options]",
-                                description="webapp command line interface")
+                                description="blobserver command line interface")
     p.add_argument("-d", "--debug", action="store_true",
                     help="Debug logging output.")
     x0 = p.add_mutually_exclusive_group()
@@ -33,7 +33,7 @@ def execute(pargs):
         flask.current_app.config["DEBUG"] = True
         flask.current_app.config["LOGFORMAT"] = "%(levelname)-10s %(message)s"
     if pargs.create_admin:
-        with webapp.user.UserSaver() as saver:
+        with blobserver.user.UserSaver() as saver:
             saver.set_username(input("username > "))
             saver.set_email(input("email > "))
             saver.set_password(getpass.getpass("password > "))
@@ -41,7 +41,7 @@ def execute(pargs):
             saver.set_status(constants.ENABLED)
             saver["apikey"] = None
     elif pargs.create_user:
-        with webapp.user.UserSaver() as saver:
+        with blobserver.user.UserSaver() as saver:
             saver.set_username(input("username > "))
             saver.set_email(input("email > "))
             saver.set_password(getpass.getpass("password > "))
@@ -55,7 +55,7 @@ def main():
     pargs = parser.parse_args()
     if len(sys.argv) == 1:
         parser.print_usage()
-    with webapp.app.app.app_context():
+    with blobserver.app.app.app_context():
         flask.g.db = utils.get_db()
         execute(pargs)
 

@@ -7,8 +7,8 @@ import sys
 
 import flask
 
-from webapp import constants
-from webapp import utils
+from blobserver import constants
+from blobserver import utils
 
 
 class BaseSaver:
@@ -21,8 +21,7 @@ class BaseSaver:
     def __init__(self, doc=None):
         if doc is None:
             self.original = {}
-            self.doc = {"iuid": utils.get_iuid(),
-                        "created": utils.get_time()}
+            self.doc = {"created": utils.get_time()}
             self.initialize()
         else:
             self.original = copy.deepcopy(doc)
@@ -70,7 +69,6 @@ class BaseSaver:
         entry = {"diff": diff,
                  "timestamp": utils.get_time()}
         values = [utils.get_iuid(),
-                  self.doc["iuid"],
                   json.dumps(diff),
                   utils.get_time()]
         if hasattr(flask.g, "current_user") and flask.g.current_user:
@@ -85,7 +83,7 @@ class BaseSaver:
             values.append(os.path.basename(sys.argv[0]))
         with flask.g.db:
             flask.g.db.execute("INSERT INTO logs "
-                               " ('iuid', 'docid', 'diff',"
+                               " ('iuid', 'filename', 'diff',"
                                "  'timestamp', 'username',"
                                " 'remote_addr', 'user_agent')"
                                " VALUES (?,?,?,?,?,?,?)", values)
