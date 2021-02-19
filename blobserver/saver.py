@@ -14,14 +14,13 @@ from blobserver import utils
 class BaseSaver:
     "Base entity saver context."
 
-    DOCTYPE = None
-    EXCLUDE_PATHS = [["modified"]]
-    HIDDEN_VALUE_PATHS = []
+    LOG_EXCLUDE_PATHS = [["modified"]]  # Exclude from log info.
+    LOG_HIDE_VALUE_PATHS = []           # Do not show value in log.
 
     def __init__(self, doc=None):
         if doc is None:
             self.original = {}
-            self.doc = {"created": utils.get_time()}
+            self.doc = {}
             self.initialize()
         else:
             self.original = copy.deepcopy(doc)
@@ -46,7 +45,8 @@ class BaseSaver:
 
     def initialize(self):
         "Initialize the new entity."
-        pass
+        self.doc["iuid"] = utils.get_iuid()
+        self.doc["created"] = utils.get_time()
 
     def prepare(self):
         "Preparations before making any changes."
@@ -69,6 +69,7 @@ class BaseSaver:
         entry = {"diff": diff,
                  "timestamp": utils.get_time()}
         values = [utils.get_iuid(),
+                  self.doc["iuid"],
                   json.dumps(diff),
                   utils.get_time()]
         if hasattr(flask.g, "current_user") and flask.g.current_user:
@@ -83,7 +84,7 @@ class BaseSaver:
             values.append(os.path.basename(sys.argv[0]))
         with flask.g.db:
             flask.g.db.execute("INSERT INTO logs "
-                               " ('iuid', 'filename', 'diff',"
+                               " ('iuid', 'docid', 'diff',"
                                "  'timestamp', 'username',"
                                " 'remote_addr', 'user_agent')"
                                " VALUES (?,?,?,?,?,?,?)", values)
@@ -99,34 +100,34 @@ class BaseSaver:
         old_keys = set(old.keys())
         for key in new_keys.difference(old_keys):
             self.stack.append(key)
-            if self.stack not in self.EXCLUDE_PATHS:
-                if self.stack in self.HIDDEN_VALUE_PATHS:
+            if self.stack not in self.LOG_EXCLUDE_PATHS:
+                if self.stack in self.LOG_HIDE_VALUE_PATHS:
                     added[key] = "<hidden>"
                 else:
                     added[key] = new[key]
             self.stack.pop()
         for key in old_keys.difference(new_keys):
             self.stack.append(key)
-            if self.stack not in self.EXCLUDE_PATHS:
-                if self.stack in self.HIDDEN_VALUE_PATHS:
+            if self.stack not in self.LOG_EXCLUDE_PATHS:
+                if self.stack in self.LOG_HIDE_VALUE_PATHS:
                     removed[key] = "<hidden>"
                 else:
                     removed[key] = old[key]
             self.stack.pop()
         for key in new_keys.intersection(old_keys):
             self.stack.append(key)
-            if self.stack not in self.EXCLUDE_PATHS:
+            if self.stack not in self.LOG_EXCLUDE_PATHS:
                 new_value = new[key]
                 old_value = old[key]
                 if isinstance(new_value, dict) and isinstance(old_value, dict):
                     changes = self.diff(old_value, new_value)
                     if changes:
-                        if self.stack in self.HIDDEN_VALUE_PATHS:
+                        if self.stack in self.LOG_HIDE_VALUE_PATHS:
                             updated[key] = "<hidden>"
                         else:
                             updated[key] = changes
                 elif new_value != old_value:
-                    if self.stack in self.HIDDEN_VALUE_PATHS:
+                    if self.stack in self.LOG_HIDE_VALUE_PATHS:
                         updated[key]= dict(new_value="<hidden>",
                                            old_value="<hidden>")
                     else:

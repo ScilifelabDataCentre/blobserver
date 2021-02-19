@@ -27,14 +27,14 @@ def init(app):
     with db:
         db.execute("CREATE TABLE IF NOT EXISTS logs"
                    "(iuid TEXT PRIMARY KEY,"
-                   " filename TEXT NOT NULL,"
+                   " docid TEXT NOT NULL,"
                    " diff TEXT NOT NULL,"
                    " username TEXT,"
                    " remote_addr TEXT,"
                    " user_agent TEXT,"
                    " timestamp TEXT NOT NULL)")
         db.execute("CREATE INDEX IF NOT EXISTS"
-                   " logs_filename_index ON logs (filename)")
+                   " logs_docid_index ON logs (docid)")
 
 # Global logger instance.
 _logger = None
@@ -252,14 +252,14 @@ def get_db(app=None):
     db.row_factory = sqlite3.Row
     return db
 
-def get_logs(filename):
-    """Return the list of log entries for the given filename,
+def get_logs(docid):
+    """Return the list of log entries for the given docid,
     sorted by reverse timestamp.
     """
     cursor = flask.g.db.cursor()
     cursor.execute("SELECT diff, username, remote_addr, user_agent, timestamp"
-                   " FROM logs WHERE filename=?"
-                   " ORDER BY timestamp DESC", (filename,))
+                   " FROM logs WHERE docid=?"
+                   " ORDER BY timestamp DESC", (docid,))
     result = []
     for row in cursor:
         item = dict(zip(row.keys(), row))

@@ -50,10 +50,11 @@ app.after_request(utils.log_access)
 @app.route("/")
 def home():
     "Home page. Redirect to API root if JSON is accepted."
+    recent = blobserver.blob.get_most_recent_blobs()
     if utils.accept_json():
         return flask.redirect(flask.url_for("api_root"))
     else:
-        return flask.render_template("home.html")
+        return flask.render_template("home.html", recent=recent)
 
 @app.route("/debug")
 @utils.admin_required

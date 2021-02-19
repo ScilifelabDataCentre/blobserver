@@ -27,7 +27,7 @@ DEFAULT_SETTINGS = dict(
     SECRET_KEY = None,          # Must be set in 'settings.json'
     SALT_LENGTH = 12,
     STORAGE_DIRPATH = None,     # Must be set in 'settings.json'
-    SQLITE3_FILEPATH = None,    # Must be set in 'settings.json'
+    SQLITE3_FILENAME = "_data.sqlite3",    # Must start with underscore.
     JSON_AS_ASCII = False,
     JSON_SORT_KEYS = False,
     JSONIFY_PRETTYPRINT_REGULAR = False,
@@ -84,8 +84,7 @@ def init(app):
             pass
 
     # Clean up filepaths.
-    for key in ["SITE_STATIC_DIRPATH", "LOG_FILEPATH",
-                "SQLITE3_FILEPATH", "STORAGE_DIRPATH"]:
+    for key in ["SITE_STATIC_DIRPATH", "LOG_FILEPATH", "STORAGE_DIRPATH"]:
         path = app.config[key]
         if not path: continue
         path = os.path.expanduser(path)
@@ -98,5 +97,12 @@ def init(app):
     assert app.config["SECRET_KEY"]
     assert app.config["SALT_LENGTH"] > 6
     assert app.config["MIN_PASSWORD_LENGTH"] > 4
-    assert app.config["SQLITE3_FILEPATH"]
     assert app.config["STORAGE_DIRPATH"]
+    assert app.config["SQLITE3_FILENAME"]
+    assert app.config["SQLITE3_FILENAME"].startswith("_")
+
+    # Set the filepath for the Sqlite3 database.
+    # Will always be in the storage directory,
+    # but is protected by the beginning underscore.
+    app.config["SQLITE3_FILEPATH"] = os.path.join(app.config["STORAGE_DIRPATH"],
+                                                  app.config["SQLITE3_FILENAME"])

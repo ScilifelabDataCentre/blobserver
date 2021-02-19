@@ -12,9 +12,6 @@ from blobserver import constants
 from blobserver import utils
 from blobserver.saver import BaseSaver
 
-KEYS = ["iuid", "username", "email", "role", "status",
-        "password", "apikey", "created", "modified"]
-
 def init(app):
     "Initialize the database: create user table."
     db = utils.get_db(app)
@@ -35,6 +32,10 @@ def init(app):
                    " users_email_index ON users (email COLLATE NOCASE)")
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
                    " users_apikey_index ON users (apikey)")
+
+KEYS = ["iuid", "username", "email", "role", "status",
+        "password", "apikey", "created", "modified"]
+
 
 blueprint = flask.Blueprint("user", __name__)
 
@@ -331,10 +332,11 @@ def disable(username):
 class UserSaver(BaseSaver):
     "User document saver context."
 
-    HIDDEN_VALUE_PATHS = [["password"]]
+    HIDDEN_VALUE_PATHS = [["password", "apikey"]]
 
     def initialize(self):
         "Set the status for a new user."
+        super().initialize()
         if flask.current_app.config["USER_ENABLE_IMMEDIATELY"]:
             self.doc["status"] = constants.ENABLED
         else:
@@ -389,7 +391,6 @@ class UserSaver(BaseSaver):
                 raise ValueError("Password too short.")
             self.doc["password"] = generate_password_hash(
                 password, salt_length=config["SALT_LENGTH"])
-            print("set password")
 
     def set_apikey(self):
         "Set a new API key."

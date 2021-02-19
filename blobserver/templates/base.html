@@ -163,11 +163,7 @@
           {% endif %}
         </div>
         <div class="col-md-4 offset-md-4 text-right">
-          <a href="{{ constants.SOURCE_URL }}">
-            <img src="{{ url_for('static', filename='logo32.png') }}"
-		 width="32" height="32">
-	    {{ constants.SOURCE_NAME }}
-	  </a>
+          <a href="{{ constants.SOURCE_URL }}">{{ constants.SOURCE_NAME }}</a>
 	  version {{ constants.VERSION }}
         </div>
       </div>

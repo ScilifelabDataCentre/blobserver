@@ -9,3 +9,53 @@
 </div>
 {% endblock %} {# block meta #}
 
+{% block main %}
+<p class="lead">
+  This site serves blobs (files containing any data) publicly. A file
+  can be uploaded or updated by an authorized account.
+</p>
+<h4>Most recently modified blobs</h4>
+<table id="recent" class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>Blob</th>
+      <th>Size</th>
+      <th>Modified</th>
+      <th>Details</th>
+      <th>User</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for blob in recent %}
+    <tr>
+      <td>
+        <a href="{{ url_for('blob.blob', filename=blob['filename']) }}">
+          {{ blob['filename'] }}</a>
+      </td>
+      <td>{{ blob['size'] | filesizeformat }}</td>
+      <td class="localtime">{{ blob['modified'] }}</td>
+      <td></td>
+      <td>{{ blob['username'] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %} {# block main #}
+
+{% block actions %}
+<a href="{{ url_for('blob.upload') }}" role="button"
+   class="btn btn-block btn-primary">Upload</a>
+{% endblock %} {# block actions #}
+
+
+{% block javascript %}
+<script>
+  $(function() {
+    $("#recent").DataTable( {
+      pagingType: "full_numbers",
+      pageLength: 10,
+      order: [[2, "desc"]]
+    });
+  });
+</script>
+{% endblock %}
