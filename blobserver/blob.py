@@ -47,6 +47,9 @@ def upload():
             return utils.error("No file provided.")
         if get_blob_data(infile.filename):
             return utils.error("Blob already exists; do update instead.")
+        if infile.filename.startswith("_"):
+            return utils.error("Filename is not allowed to start with an"
+                               " underscore character; rename and try again.")
         with BlobSaver() as saver:
             saver["description"] = flask.request.form.get("description")
             saver["filename"] = infile.filename
@@ -121,6 +124,7 @@ def get_blob_data(filename):
     """Return the data (not the content) for the blob.
     Return None if not found.
     """
+    if filename.startswith("_"): return None
     cursor = flask.g.db.cursor()
     rows = list(cursor.execute("SELECT iuid, filename, username, description,"
                                " md5, sha256, sha512, size, created, modified"
