@@ -65,6 +65,14 @@ def blob(filename):
     return flask.send_from_directory(
         flask.current_app.config["STORAGE_DIRPATH"], filename)
 
+@blueprint.route("/<filename>/details")
+def details(filename):
+    data = get_blob_data(filename)
+    if not data:
+        return utils.error("No such blob.")
+    return flask.render_template("blob/details.html", data=data)
+
+
 class BlobSaver(BaseSaver):
     "Save the blob."
 

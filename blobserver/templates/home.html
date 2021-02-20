@@ -26,16 +26,26 @@
     </tr>
   </thead>
   <tbody>
-    {% for blob in recent %}
+    {% for data in recent %}
     <tr>
       <td>
-        <a href="{{ url_for('blob.blob', filename=blob['filename']) }}">
-          {{ blob['filename'] }}</a>
+        <a href="{{ url_for('blob.blob', filename=data['filename']) }}">
+          {{ data['filename'] }}</a>
       </td>
-      <td>{{ blob['size'] | filesizeformat }}</td>
-      <td class="localtime">{{ blob['modified'] }}</td>
-      <td></td>
-      <td>{{ blob['username'] }}</td>
+      <td>{{ data['size'] | filesizeformat }}</td>
+      <td class="localtime">{{ data['modified'] }}</td>
+      <td>
+        <a href="{{ url_for('blob.details', filename=data['filename']) }}">
+          Details</a>
+      </td>
+      <td>
+        {% if g.am_admin %}
+        <a href="{{ url_for('user.display', username=data['username']) }}">
+          {{ data['username'] }}</a>
+        {% else %}
+        {{ data['username'] }}
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>

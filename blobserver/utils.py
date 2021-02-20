@@ -12,6 +12,7 @@ import uuid
 import flask
 import flask_mail
 import jinja2.utils
+import marko
 import werkzeug.routing
 
 from blobserver import constants
@@ -21,7 +22,7 @@ def init(app):
     - Add template filters.
     - Create the logs table in the database.
     """
-    app.add_template_filter(thousands)
+    app.add_template_filter(markdown)
     app.add_template_filter(tojson2)
     db = get_db(app)
     with db:
@@ -209,12 +210,13 @@ def flash_message(msg):
     "Flash information message."
     flask.flash(str(msg), "message")
 
-def thousands(value):
-    "Template filter: Output integer with thousands delimiters."
-    if isinstance(value, int):
-        return "{:,}".format(value)
-    else:
-        return value
+def get_md_parser():
+    "Get the Markdown parser for HTML. Allows for future extensions."
+    return marko.Markdown()
+
+def markdown(text):
+    "Template filter to process the text using Marko markdown."
+    return jinja2.utils.Markup(get_md_parser().convert(text or ""))
 
 def tojson2(value, indent=2):
     """Transform to string JSON representation keeping single-quotes

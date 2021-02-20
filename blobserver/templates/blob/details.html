@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Details {{ data['filename'] }}{% endblock %}
+
+{% block body_title %}
+Details
+<a href="{{ url_for('blob.blob', filename=data['filename']) }}">
+  {{ data['filename'] }}</a>
+{% endblock %}
+
+{% block main %}
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">Description</div>
+  <div class="col-md">
+    {{ data['description'] | markdown }}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">Size</div>
+  <div class="col-md">
+    {{ data['size'] | filesizeformat }}
+    <small class="text-muted ml-2">({{ data['size'] }} bytes)</small>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">md5</div>
+  <div class="col-md small text-break">{{ data['md5'] }}</div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">sha256</div>
+  <div class="col-md small text-break">{{ data['sha256'] }}</div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">sha512</div>
+  <div class="col-md small text-break">{{ data['sha512'] }}</div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">Modified</div>
+  <div class="col-md localtime">{{ data['modified'] }}</div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">Created</div>
+  <div class="col-md localtime">{{ data['created'] }}</div>
+</div>
+
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">User</div>
+  <div class="col-md localtime">
+    {% if g.am_admin %}
+    <a href="{{ url_for('user.display', username=data['username']) }}">
+      {{ data['username'] }}</a>
+    {% else %}
+    {{ data['username'] }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %} {# block main #}

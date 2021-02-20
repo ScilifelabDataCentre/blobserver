@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block head_title %}Upload a new blob (file){% endblock %}
+{% block head_title %}Upload a file to a new blob (file){% endblock %}
 
-{% block body_title %}Upload a new blob (file){% endblock %}
+{% block body_title %}Upload a file to a new blob (file){% endblock %}
 
 {% block main %}
 <form action="{{ url_for('.upload') }}"
@@ -27,6 +27,9 @@
 	     aria-describedby="blobHelp">
       <label class="custom-file-label" for="blob">Choose file</label>
     </div>
+    <small id="blobHelp" class="form-text">
+      The filename is not allowed to start with an underscore character '_'.
+    </small>
   </div>
 
   <div class="mb-3">
