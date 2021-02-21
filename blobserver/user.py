@@ -23,7 +23,8 @@ def init(app):
                    " role TEXT NOT NULL,"
                    " status TEXT NOT NULL,"
                    " password TEXT,"
-                   " apikey TEXT,"
+                   " accesskey TEXT,"
+                   " quota INTEGER,"
                    " created TEXT NOT NULL,"
                    " modified TEXT NOT NULL)")
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
@@ -31,10 +32,10 @@ def init(app):
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
                    " users_email_index ON users (email COLLATE NOCASE)")
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
-                   " users_apikey_index ON users (apikey)")
+                   " users_accesskey_index ON users (accesskey)")
 
 KEYS = ["iuid", "username", "email", "role", "status",
-        "password", "apikey", "created", "modified"]
+        "password", "accesskey", "quota", "created", "modified"]
 
 
 blueprint = flask.Blueprint("user", __name__)
@@ -84,6 +85,7 @@ def register():
                 saver.set_username(flask.request.form.get("username"))
                 saver.set_email(flask.request.form.get("email"))
                 saver.set_role(constants.USER)
+                saver.set_quota(flask.current_app.config["DEFAULT_QUOTA"])
                 if flask.g.am_admin:
                     password = flask.request.form.get("password") or None
                     if password:
@@ -241,7 +243,7 @@ def edit(username):
         return utils.error("Access not allowed.")
 
     if utils.http_GET():
-        deletable = am_admin_and_not_self(user) and is_empty(user)
+        deletable = am_admin_and_not_self(user) and user["blobs_count"] == 0
         return flask.render_template("user/edit.html",
                                      user=user,
                                      change_role=am_admin_and_not_self(user),
@@ -253,15 +255,24 @@ def edit(username):
                 email = flask.request.form.get("email")
                 if email != user["email"]:
                     saver.set_email(email)
+                try:
+                    quota = flask.request.form.get('quota') or None
+                    if quota:
+                        quota = int(quota)
+                        if quota < 0: raise ValueError
+                except (ValueError, TypeError):
+                    pass
+                else:
+                    saver.set_quota(quota)
             if am_admin_and_not_self(user):
                 saver.set_role(flask.request.form.get("role"))
-            if flask.request.form.get("apikey"):
-                saver.set_apikey()
+            if flask.request.form.get("accesskey"):
+                saver.set_accesskey()
         return flask.redirect(
             flask.url_for(".display", username=user["username"]))
 
     elif utils.http_DELETE():
-        if not is_empty(user):
+        if user["blobs_count"] != 0:
             return utils.error("Cannot delete non-empty user account.")
         with flask.g.db:
             flask.g.db.execute("DELETE FROM logs WHERE docid=?",(user["iuid"],))
@@ -288,7 +299,6 @@ def logs(username):
         "logs.html",
         title=f"User {user['username']}",
         cancel_url=flask.url_for(".display", username=user["username"]),
-        api_logs_url=flask.url_for("api_user.logs", username=user["username"]),
         logs=utils.get_logs(user["iuid"]))
 
 @blueprint.route("/all")
@@ -332,7 +342,7 @@ def disable(username):
 class UserSaver(BaseSaver):
     "User document saver context."
 
-    HIDDEN_VALUE_PATHS = [["password", "apikey"]]
+    HIDDEN_VALUE_PATHS = [["password", "accesskey"]]
 
     def initialize(self):
         "Set the status for a new user."
@@ -381,6 +391,10 @@ class UserSaver(BaseSaver):
             raise ValueError("Invalid role.")
         self.doc["role"] = role
 
+    def set_quota(self, value=None):
+        assert value is None or value >= 0
+        self.doc["quota"] = value
+
     def set_password(self, password=None):
         "Set the password; a one-time code if no password provided."
         config = flask.current_app.config
@@ -392,9 +406,9 @@ class UserSaver(BaseSaver):
             self.doc["password"] = generate_password_hash(
                 password, salt_length=config["SALT_LENGTH"])
 
-    def set_apikey(self):
-        "Set a new API key."
-        self.doc["apikey"] = utils.get_iuid()
+    def set_accesskey(self):
+        "Set a new access key."
+        self.doc["accesskey"] = utils.get_iuid()
 
     def upsert(self):
         "Actually insert or update the user in the database."
@@ -419,8 +433,8 @@ class UserSaver(BaseSaver):
 
 # Utility functions
 
-def get_user(username=None, email=None, apikey=None):
-    """Return the user for the given username, email or apikey.
+def get_user(username=None, email=None, accesskey=None):
+    """Return the user for the given username, email or accesskey.
     Return None if no such user.
     """
     sql = f"SELECT {','.join(KEYS)} FROM users"
@@ -429,37 +443,45 @@ def get_user(username=None, email=None, apikey=None):
         cursor.execute(sql + " WHERE username=? COLLATE NOCASE", (username,))
     elif email:
         cursor.execute(sql + " WHERE email=? COLLATE NOCASE", (email,))
-    elif apikey:
-        cursor.execute(sql + " WHERE apikey=?", (apikey,))
+    elif accesskey:
+        cursor.execute(sql + " WHERE accesskey=?", (accesskey,))
     else:
         return None
     rows = list(cursor)
     if len(rows) == 0:
         return None
     else:
-        return dict(zip(rows[0].keys(), rows[0]))
+        user = dict(zip(rows[0].keys(), rows[0]))
+        user["blobs_count"] = user_blobs_count(user)
+        user["blobs_size"] = user_blobs_size(user)
+        return user
 
 def get_users(role=None, status=None):
-    "Get the users optionally specified by role and status."
+    """Get the users optionally specified by role and status.
+    Add total blobs count and size.
+    """
     assert role is None or role in constants.USER_ROLES
     assert status is None or status in constants.USER_STATUSES
     cursor = flask.g.db.cursor()
     if role is None:
-        rows = cursor.execute(f"SELECT {','.join(KEYS)} FROM users")
+        rows = cursor.execute("SELECT * FROM users")
     elif status is None:
-        rows = cursor.execute(f"SELECT {','.join(KEYS)} FROM users"
-                              " WHERE role=?", (role,))
+        rows = cursor.execute("SELECT * FROM users WHERE role=?", (role,))
     else:
-        rows = cursor.execute(f"SELECT {','.join(KEYS)} FROM users"
-                              " WHERE role=? AND status=?", (role, status))
-    return [dict(zip(row.keys(), row)) for row in rows]
+        rows = cursor.execute("SELECT * FROM users WHERE role=? AND status=?",
+                              (role, status))
+    users = [dict(zip(row.keys(), row)) for row in rows]
+    for user in users:
+        user["blobs_count"] = user_blobs_count(user)
+        user["blobs_size"] = user_blobs_size(user)
+    return  users
 
 def get_current_user():
     """Return the user for the current session.
     Return None if no such user, or disabled.
     """
     user = get_user(username=flask.session.get("username"),
-                    apikey=flask.request.headers.get("x-apikey"))
+                    accesskey=flask.request.headers.get("x-accesskey"))
     if user is None or user["status"] != constants.ENABLED:
         flask.session.pop("username", None)
         return None
@@ -490,11 +512,6 @@ def send_password_code(user, action):
     message.body = f"To set your password, go to {url}"
     utils.mail.send(message)
 
-def is_empty(user):
-    "Is the given user account empty? No data associated with it."
-    # XXX Needs implementation.
-    return True
-
 def am_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"
     if not flask.g.current_user: return False
@@ -505,3 +522,17 @@ def am_admin_and_not_self(user):
     "Is the current user admin, but not the same as the given user?"
     return flask.g.am_admin and \
         flask.g.current_user["username"].lower() != user["username"].lower()
+
+def user_blobs_count(user):
+    "Return the number of blobs the user has."
+    cursor = flask.g.db.cursor()
+    rows = cursor.execute("SELECT COUNT(*) FROM blobs WHERE username=?",
+                          (user["username"],))
+    return list(rows)[0][0] or 0
+
+def user_blobs_size(user):
+    "Return the total number of bytes for the blobs the user has."
+    cursor = flask.g.db.cursor()
+    rows = cursor.execute("SELECT SUM(size) FROM blobs WHERE username=?",
+                          (user["username"],))
+    return list(rows)[0][0] or 0

@@ -1,0 +1,11 @@
+{# DataTables JavaScript setup for the blobs list. #}
+
+<script>
+  $(function() {
+    $("#blobs").DataTable( {
+      pagingType: "full_numbers",
+      pageLength: 25,
+      order: [[2, "desc"]]
+    });
+  });
+</script>

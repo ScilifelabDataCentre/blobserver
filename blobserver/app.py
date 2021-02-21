@@ -8,13 +8,7 @@ import blobserver.config
 import blobserver.user
 import blobserver.site
 import blobserver.blob
-
-import blobserver.api.about
-import blobserver.api.root
-import blobserver.api.schema
-import blobserver.api.user
-# XXX To be developed.
-# import blobserver.api.blob
+import blobserver.blobs
 from blobserver import constants
 from blobserver import utils
 
@@ -49,12 +43,9 @@ app.after_request(utils.log_access)
 
 @app.route("/")
 def home():
-    "Home page. Redirect to API root if JSON is accepted."
-    recent = blobserver.blob.get_most_recent_blobs()
-    if utils.accept_json():
-        return flask.redirect(flask.url_for("api_root"))
-    else:
-        return flask.render_template("home.html", recent=recent)
+    "Home page"
+    blobs = blobserver.blob.get_most_recent_blobs()
+    return flask.render_template("home.html", blobs=blobs)
 
 @app.route("/debug")
 @utils.admin_required
@@ -78,13 +69,7 @@ app.register_blueprint(blobserver.about.blueprint, url_prefix="/about")
 app.register_blueprint(blobserver.user.blueprint, url_prefix="/user")
 app.register_blueprint(blobserver.site.blueprint, url_prefix="/site")
 app.register_blueprint(blobserver.blob.blueprint, url_prefix="/blob")
-
-app.register_blueprint(blobserver.api.root.blueprint, url_prefix="/api")
-app.register_blueprint(blobserver.api.about.blueprint, url_prefix="/api/about")
-app.register_blueprint(blobserver.api.schema.blueprint, url_prefix="/api/schema")
-app.register_blueprint(blobserver.api.user.blueprint, url_prefix="/api/user")
-# XXX To be developed.
-# app.register_blueprint(blobserver.api.blob.blueprint, url_prefix="/api/blob")
+app.register_blueprint(blobserver.blobs.blueprint, url_prefix="/blobs")
 
 
 # This code is used only during development.

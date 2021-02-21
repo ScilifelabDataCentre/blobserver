@@ -21,20 +21,29 @@
     <td>{{ user['status'] }}</td>
   </tr>
   <tr>
-    <th class="text-right">API key</th>
-    <td>{{ user.get('apikey') or '-' }}</td>
+    <th class="text-right">Total number blobs</th>
+    <td>{{ user['blobs_count'] }}</td>
+  </tr>
+  <tr>
+    <th class="text-right">Total size blobs</th>
+    <td>{{ user['blobs_size'] | filesizeformat }}</td>
+  </tr>
+  <tr>
+    <th class="text-right">Quota</th>
+    <td>
+        {% if user['quota'] %}
+        {{ user['quota'] | filesizeformat }}
+        {% else %}
+        -
+        {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <th class="text-right">Access key</th>
+    <td>{{ user.get('accesskey') or '-' }}</td>
   </tr>
 </table>
 {% endblock %} {# block main #}
-
-{% block meta %}
-<div class="py-1">
-  <div>
-    <a href="{{ url_for('api_user.display', username=user['username']) }}"
-       class="badge badge-pill badge-dark">API</a>
-  </div>
-</div>
-{% endblock %} {# block meta #}
 
 {% block actions %}
 <div class="mt-2">

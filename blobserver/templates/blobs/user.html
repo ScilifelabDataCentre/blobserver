@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block head_title %}User {{ user['username'] }} blobs{% endblock %}
+
+{% block body_title %}User {{ user['username'] }} blobs{% endblock %}
+
+{% block main %}
+{% include 'blobs/list.html' %}
+{% endblock %}
+
+{% block actions %}
+{% if g.current_user and user['username'] == g.current_user['username'] %}
+<a href="{{ url_for('blob.upload') }}" role="button"
+   class="btn btn-block btn-primary">Upload</a>
+{% endif %} {# if g.current_user ... #}
+{% endblock %} {# block actions #}
+
+{% block javascript %}
+{% include 'blobs/list_javascript.html' %}
+{% endblock %}

@@ -39,7 +39,7 @@ def execute(pargs):
             saver.set_password(getpass.getpass("password > "))
             saver.set_role(constants.ADMIN)
             saver.set_status(constants.ENABLED)
-            saver["apikey"] = None
+            saver["accesskey"] = None
     elif pargs.create_user:
         with blobserver.user.UserSaver() as saver:
             saver.set_username(input("username > "))
@@ -47,7 +47,7 @@ def execute(pargs):
             saver.set_password(getpass.getpass("password > "))
             saver.set_role(constants.USER)
             saver.set_status(constants.ENABLED)
-            saver["apikey"] = None
+            saver["accesskey"] = None
 
 def main():
     "Entry point for command line interface."

@@ -1,0 +1,37 @@
+{# List of blobs. Required: blobs = list of blob data dictionaries. #}
+
+<table id="blobs" class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>Blob</th>
+      <th>Size</th>
+      <th>Modified</th>
+      <th>Details</th>
+      <th>User</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for data in blobs %}
+    <tr>
+      <td>
+        <a href="{{ url_for('blob.blob', filename=data['filename']) }}">
+          {{ data['filename'] }}</a>
+      </td>
+      <td>{{ data['size'] | filesizeformat }}</td>
+      <td class="localtime">{{ data['modified'] }}</td>
+      <td>
+        <a href="{{ url_for('blob.details', filename=data['filename']) }}">
+          Details</a>
+      </td>
+      <td>
+        {% if g.am_admin %}
+        <a href="{{ url_for('user.display', username=data['username']) }}">
+          {{ data['username'] }}</a>
+        {% else %}
+        {{ data['username'] }}
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

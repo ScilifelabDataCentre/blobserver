@@ -12,6 +12,7 @@
       <th>Email</th>
       <th>Role</th>
       <th>Status</th>
+      <th>Quota</th>
       <th>Modified</th>
     </tr>
   </thead>
@@ -33,21 +34,19 @@
         {{ user['status'] }}
         {% endif %}
       </td>
+      <td>
+        {% if user['quota'] %}
+        {{ user['quota'] | filesizeformat }}
+        {% else %}
+        -
+        {% endif %}
+      </td>
       <td class="localtime">{{ user['modified'] }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endblock %}
-
-{% block meta %}
-<div class="py-1">
-  <div>
-    <a href="{{ url_for('api_user.all') }}"
-       class="badge badge-pill badge-dark">API</a>
-  </div>
-</div>
-{% endblock %} {# block meta #}
 
 {% block javascript %}
 <script>

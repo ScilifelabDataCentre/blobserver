@@ -28,9 +28,6 @@ def init(app):
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
                    " blobs_filename_index ON blobs (filename COLLATE NOCASE)")
 
-KEYS = ["iuid", "filename", "username", "description",
-        "md5", "sha256", "sha512", "size", "created", "modified"]
-
 
 blueprint = flask.Blueprint("blob", __name__)
 
@@ -47,17 +44,18 @@ def upload():
             return utils.error("No file provided.")
         if get_blob_data(infile.filename):
             return utils.error("Blob already exists; do update instead.")
-        if infile.filename.startswith("_"):
-            return utils.error("Filename is not allowed to start with an"
-                               " underscore character; rename and try again.")
-        with BlobSaver() as saver:
-            saver["description"] = flask.request.form.get("description")
-            saver["filename"] = infile.filename
-            saver["content"] = infile.read()
-            saver["username"] = flask.g.current_user["username"]
-        return flask.redirect(flask.url_for("home"))
+        try:
+            with BlobSaver() as saver:
+                saver["description"] = flask.request.form.get("description")
+                saver["filename"] = infile.filename
+                saver["content"] = infile.read()
+                saver["username"] = flask.g.current_user["username"]
+        except ValueError as error:
+            return utils.error(error)
+        return flask.redirect(
+            flask.url_for("blob.details", filename=saver["filename"]))
 
-@blueprint.route("/<filename>", methods=["GET", "POST"])
+@blueprint.route("/<filename>")
 def blob(filename):
     data = get_blob_data(filename)
     if not data:
@@ -82,6 +80,13 @@ class BlobSaver(BaseSaver):
         for key in ["filename", "content", "username"]:
             if not self.doc.get(key):
                 raise ValueError(f"Invalid blob: {key} not set.")
+        if self.doc["filename"].startswith("_"):
+            raise ValueError("Filename is not allowed to start with"
+                             " an underscore character.")
+        if flask.g.current_user["quota"]:
+            if len(self.doc["content"]) + flask.g.current_user["blobs_size"] > \
+               flask.g.current_user["quota"]:
+                raise ValueError("User's quota cannot accommodate the blob.")
 
     def upsert(self):
         if "content" in self.doc:  # The content has changed; insert or update.

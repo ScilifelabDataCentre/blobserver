@@ -1,14 +1,12 @@
 {% extends 'base.html' %}
 
-{% block main %}
-<p class="lead">
-  This site serves blobs (files containing any data) publicly. A file
-  can be uploaded or updated by anyone having an account in the system.
-</p>
+{% block head_title %}All blobs{% endblock %}
 
-<h4 class="my-3">Most recently modified blobs</h4>
+{% block body_title %}All blobs{% endblock %}
+
+{% block main %}
 {% include 'blobs/list.html' %}
-{% endblock %} {# block main #}
+{% endblock %}
 
 {% block actions %}
 {% if g.current_user %}

@@ -38,6 +38,15 @@
       </button>
       <div class="collapse navbar-collapse" id="top_navbar">
         <ul class="navbar-nav mr-auto">
+          {% if g.current_user %}
+          <li class"nav-item">
+            <a href="{{ url_for('blobs.user', username=g.current_user['username']) }}" 
+               class="nav-link">My blobs</a>
+          </li>
+          {% endif %}
+          <li class"nav-item">
+            <a href="{{ url_for('blobs.all') }}" class="nav-link">All blobs</a>
+          </li>
           {% if g.am_admin %}
           <li class="nav-item dropdown">
             <a href="#" id="navbarAdmin" class="nav-link dropdown-toggle pr-4"
@@ -67,6 +76,12 @@
             <div class="dropdown-menu" aria-labelledby="navbarAbout">
               <a class="nav-link"
                  href="{{ url_for('about.software') }}">Software</a>
+              {% if g.am_admin %}
+              <a class="nav-link"
+                 href="{{ url_for('about.settings') }}">Settings</a>
+              <a class="nav-link"
+                 href="{{ url_for('debug') }}">Debug</a>
+              {% endif %} {# if g.am_admin #}
 	    </div>
           </li>
 
