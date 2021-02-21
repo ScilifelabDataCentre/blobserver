@@ -2,6 +2,7 @@
 
 import hashlib
 import http.client
+import os
 import os.path
 
 import flask
@@ -39,7 +40,7 @@ def upload():
         return flask.render_template("blob/upload.html")
 
     elif utils.http_POST():
-        infile = flask.request.files.get("blob")
+        infile = flask.request.files.get("file")
         if not infile:
             return utils.error("No file provided.")
         if get_blob_data(infile.filename):
@@ -53,22 +54,82 @@ def upload():
         except ValueError as error:
             return utils.error(error)
         return flask.redirect(
-            flask.url_for("blob.details", filename=saver["filename"]))
+            flask.url_for("blob.info", filename=saver["filename"]))
 
-@blueprint.route("/<filename>")
+@blueprint.route("/<filename>", methods=["GET", "POST", "PUT", "DELETE"])
 def blob(filename):
-    data = get_blob_data(filename)
-    if not data:
-        flask.abort(http.client.NOT_FOUND)
-    return flask.send_from_directory(
-        flask.current_app.config["STORAGE_DIRPATH"], filename)
+    if utils.http_GET():
+        data = get_blob_data(filename)
+        if not data:
+            # Just send error code; appropriate for when used as a service.
+            flask.abort(http.client.NOT_FOUND)
+        return flask.send_from_directory(
+            flask.current_app.config["STORAGE_DIRPATH"], filename)
 
-@blueprint.route("/<filename>/details")
-def details(filename):
+    elif utils.http_PUT():
+        # Create a new blob.
+        raise NotImplementedError
+
+    elif utils.http_DELETE():
+        data = get_blob_data(filename)
+        if not data:
+            # Just send error code; appropriate for when used as a service.
+            flask.abort(http.client.NOT_FOUND)
+        if not allow_delete(data):
+            # Just send error code; appropriate for when used as a service.
+            flask.abort(http.client.FOBRIDDEN)
+        delete_blob(data)
+        utils.flash_message(f"Deleted blob {data['filename']}")
+        return flask.redirect(
+            flask.url_for("blobs.user", username=data["username"]))
+
+@blueprint.route("/<filename>/info")
+def info(filename):
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
-    return flask.render_template("blob/details.html", data=data)
+    return flask.render_template("blob/info.html", 
+                                 data=data,
+                                 allow_update=allow_update(data),
+                                 allow_delete=allow_delete(data))
+
+@blueprint.route("/<filename>/update", methods=["GET", "POST"])
+@utils.login_required
+def update(filename):
+    data = get_blob_data(filename)
+    if not data:
+        return utils.error("No such blob.")
+    if not allow_update(data):
+        return utils.error("You may not update the blob.")
+
+    if utils.http_GET():
+        return flask.render_template("blob/update.html", data=data)
+
+    elif utils.http_POST():
+        try:
+            with BlobSaver(data) as saver:
+                saver["description"] = flask.request.form.get("description")
+                infile = flask.request.files.get("file")
+                if infile:
+                    saver["filename"] = infile.filename
+                    saver["content"] = infile.read()
+        except ValueError as error:
+            return utils.error(error)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=data["filename"]))
+
+@blueprint.route("/<filename>/logs")
+@utils.login_required
+def logs(filename):
+    "Display the log records of the given blob."
+    data = get_blob_data(filename)
+    if not data:
+        return utils.error("No such blob.")
+    return flask.render_template(
+        "logs.html",
+        title=f"Blob {data['filename']}",
+        cancel_url=flask.url_for(".info", filename=data["filename"]),
+        logs=utils.get_logs(data["iuid"]))
 
 
 class BlobSaver(BaseSaver):
@@ -105,11 +166,12 @@ class BlobSaver(BaseSaver):
                                        " filename=?",
                                        (self.doc["filename"],)))
             if rows[0][0] == 0:
-                cursor.execute("INSERT INTO blobs ('filename', 'username',"
-                               " 'description', 'md5', 'sha256', 'sha512',"
-                               " 'size', 'modified', 'created')"
-                               " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               (self.doc["filename"],
+                cursor.execute("INSERT INTO blobs ('iuid', 'filename',"
+                               " 'username', 'description', 'md5', 'sha256',"
+                               " 'sha512', 'size', 'modified', 'created')"
+                               " VALUES (?,?,?,?,?,?,?,?,?,?)",
+                               (self.doc["iuid"],
+                                self.doc["filename"],
                                 flask.g.current_user["username"],
                                 self.doc.get("description"),
                                 md5.hexdigest(),
@@ -153,3 +215,23 @@ def get_most_recent_blobs():
                                " ORDER BY modified DESC LIMIT ?",
                                (flask.current_app.config["MOST_RECENT"],)))
     return [dict(zip(r.keys(), r)) for r in rows]
+
+def delete_blob(data):
+    "Delete the blob and its logs."
+    with flask.g.db:
+        flask.g.db.execute("DELETE FROM logs WHERE docid=?", (data["iuid"],))
+        flask.g.db.execute("DELETE FROM blobs WHERE filename=?",
+                           (data["filename"],))
+        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
+                                data["filename"])
+        os.remove(filepath)
+
+def allow_update(data):
+    if flask.g.am_admin: return True
+    if flask.current_user["username"] == data["username"]: return True
+    return False
+
+def allow_delete(data):
+    if flask.g.am_admin: return True
+    if flask.current_user["username"] == data["username"]: return True
+    return False

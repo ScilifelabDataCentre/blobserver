@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block head_title %}Upload a file to a new blob (file){% endblock %}
+{% block head_title %}Update blob {{ data["filename"] }}{% endblock %}
 
-{% block body_title %}Upload a file to a new blob (file){% endblock %}
+{% block body_title %}Update blob {{ data["filename"] }}{% endblock %}
 
 {% block main %}
-<form action="{{ url_for('.upload') }}"
+<form action="{{ url_for('.update', filename=data['filename']) }}"
       enctype="multipart/form-data"
       method="POST">
   {{ csrf_token() }}
@@ -13,14 +13,15 @@
     <label for="description" class="col-form-label">Description</label>
     <textarea id="description" name="description"
 	      class="form-control" rows="8"
-	      aria-describedby="descriptionHelp"></textarea>
+	      aria-describedby="descriptionHelp"
+              >{{ data["description"] or '' }}</textarea>
     <small id="descriptionHelp" class="form-text">
-      Description of the new blob in Markdown format.
+      Description of the blob in Markdown format.
     </small>
   </div>
 
   <div class="mb-3">
-    <label for="file" class="col-form-label">File to upload as blob</label>
+    <label for="file" class="col-form-label">File to update blob content</label>
     <div class="custom-file">
       <input type="file" id="file" name="file"
 	     class="custom-file-input"
@@ -28,17 +29,18 @@
       <label class="custom-file-label" for="file">Choose file</label>
     </div>
     <small id="fileHelp" class="form-text">
-      The filename is not allowed to start with an underscore character '_'.
+      The file whose content will be used to update the blob. Note
+      that the filename of the blob will not be changed.
     </small>
   </div>
 
   <div class="mb-3">
-    <button type="submit" class="btn btn-primary px-5">Upload</button>
+    <button type="submit" class="btn btn-primary px-5">Update</button>
   </div>
 </form>
 {% endblock %} {# block main #}
     
 {% block actions %}
-<a href="{{ url_for('home') }}" role="button"
+<a href="{{ url_for('blob.info', filename=data['filename']) }}" role="button"
    class="btn btn-block btn-secondary">Cancel</a>
 {% endblock %} {# block actions #}

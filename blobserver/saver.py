@@ -64,76 +64,69 @@ class BaseSaver:
         """Add a log entry recording the the difference betweens the current
         and the original entity.
         """
-        self.stack = []
-        diff = self.diff(self.original, self.doc)
-        entry = {"diff": diff,
+        entry = {"docid": self.doc["iuid"],
+                 "diff": json.dumps(self.diff(self.original, self.doc)),
                  "timestamp": utils.get_time()}
-        values = [utils.get_iuid(),
-                  self.doc["iuid"],
-                  json.dumps(diff),
-                  utils.get_time()]
         if hasattr(flask.g, "current_user") and flask.g.current_user:
-            values.append(flask.g.current_user["username"])
-        else:
-            values.append(None)
+            entry["username"] = flask.g.current_user["username"]
         if flask.has_request_context():
-            values.append(str(flask.request.remote_addr))
-            values.append(str(flask.request.user_agent))
+            entry["remote_addr"] = str(flask.request.remote_addr)
+            entry["user_agent"] = str(flask.request.user_agent)
         else:
-            values.append(None)
-            values.append(os.path.basename(sys.argv[0]))
+            entry["user_agent"] = os.path.basename(sys.argv[0])
         with flask.g.db:
-            flask.g.db.execute("INSERT INTO logs "
-                               " ('iuid', 'docid', 'diff',"
-                               "  'timestamp', 'username',"
-                               " 'remote_addr', 'user_agent')"
-                               " VALUES (?,?,?,?,?,?,?)", values)
+            keys = ", ".join([f"'{k}'" for k in entry.keys()])
+            args = ",".join(["?"] * len(entry))
+            values = list(entry.values())
+            flask.g.db.execute(f"INSERT INTO logs ({keys}) VALUES ({args})",
+                               values)
 
-    def diff(self, old, new):
+    def diff(self, old, new, stack=None):
         """Find the differences between the old and the new documents.
         Uses a fairly simple algorithm which is OK for shallow hierarchies.
         """
+        if stack is None: stack = []
         added = {}
         removed = {}
         updated = {}
         new_keys = set(new.keys())
         old_keys = set(old.keys())
         for key in new_keys.difference(old_keys):
-            self.stack.append(key)
-            if self.stack not in self.LOG_EXCLUDE_PATHS:
-                if self.stack in self.LOG_HIDE_VALUE_PATHS:
+            stack.append(key)
+            if stack not in self.LOG_EXCLUDE_PATHS:
+                if stack in self.LOG_HIDE_VALUE_PATHS:
                     added[key] = "<hidden>"
                 else:
                     added[key] = new[key]
-            self.stack.pop()
+            stack.pop()
         for key in old_keys.difference(new_keys):
-            self.stack.append(key)
-            if self.stack not in self.LOG_EXCLUDE_PATHS:
-                if self.stack in self.LOG_HIDE_VALUE_PATHS:
+            stack.append(key)
+            if stack not in self.LOG_EXCLUDE_PATHS:
+                if stack in self.LOG_HIDE_VALUE_PATHS:
                     removed[key] = "<hidden>"
                 else:
                     removed[key] = old[key]
-            self.stack.pop()
+            stack.pop()
         for key in new_keys.intersection(old_keys):
-            self.stack.append(key)
-            if self.stack not in self.LOG_EXCLUDE_PATHS:
+            stack.append(key)
+            if stack not in self.LOG_EXCLUDE_PATHS:
                 new_value = new[key]
                 old_value = old[key]
                 if isinstance(new_value, dict) and isinstance(old_value, dict):
-                    changes = self.diff(old_value, new_value)
+                    changes = self.diff(old_value, new_value, stack)
                     if changes:
-                        if self.stack in self.LOG_HIDE_VALUE_PATHS:
+                        if stack in self.LOG_HIDE_VALUE_PATHS:
                             updated[key] = "<hidden>"
                         else:
                             updated[key] = changes
                 elif new_value != old_value:
-                    if self.stack in self.LOG_HIDE_VALUE_PATHS:
+                    if stack in self.LOG_HIDE_VALUE_PATHS:
                         updated[key]= dict(new_value="<hidden>",
                                            old_value="<hidden>")
                     else:
                         updated[key]= dict(new_value= new_value,
                                            old_value=old_value)
-            self.stack.pop()
+            stack.pop()
         result = {}
         if added:
             result['added'] = added

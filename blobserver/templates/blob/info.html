@@ -40,18 +40,8 @@ Details
 </div>
 
 <div class="row">
-  <div class="col-md-2 font-weight-bold text-right">Modified</div>
-  <div class="col-md localtime">{{ data['modified'] }}</div>
-</div>
-
-<div class="row">
-  <div class="col-md-2 font-weight-bold text-right">Created</div>
-  <div class="col-md localtime">{{ data['created'] }}</div>
-</div>
-
-<div class="row">
   <div class="col-md-2 font-weight-bold text-right">User</div>
-  <div class="col-md localtime">
+  <div class="col-md">
     {% if g.am_admin %}
     <a href="{{ url_for('user.display', username=data['username']) }}">
       {{ data['username'] }}</a>
@@ -61,3 +51,35 @@ Details
   </div>
 </div>
 {% endblock %} {# block main #}
+
+{% block actions %}
+{% if allow_update %}
+<a href="{{ url_for('blob.update', filename=data['filename']) }}"
+   role="button" class="btn btn-block btn-primary">Update</a>
+{% endif %} {# if allow_update #}
+{% if allow_delete %}
+<div class="mt-4">
+  <form action="{{ url_for('blob.blob', filename=data['filename']) }}"
+        method="POST">
+    {{ csrf_token() }}
+    <input type="hidden" name="_http_method" value="DELETE">
+    <button type="submit" class="btn btn-block btn-sm btn-danger"
+      onclick="return confirm('Really delete this blob?')">Delete</button>
+  </form>
+</div>
+{% endif %} {# if allow_delete #}
+{% endblock %} {# block actions #}
+
+{% block info %}
+<div class="small">
+  <div class="mt-4">
+    Modified <span class="localtime">{{ data['modified'] }}</span>
+  </div>
+  <div class="mt-1">
+    <a href="{{ url_for('.logs', filename=data['filename']) }}">Logs</a>
+  </div>
+  <div class="mt-1">
+    Created <span class="localtime">{{ data['created'] }}</span>
+  </div>
+</div>
+{% endblock %} {# block info #}

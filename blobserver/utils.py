@@ -23,11 +23,11 @@ def init(app):
     - Create the logs table in the database.
     """
     app.add_template_filter(markdown)
+    app.add_template_filter(tojson2)
     db = get_db(app)
     with db:
         db.execute("CREATE TABLE IF NOT EXISTS logs"
-                   "(iuid TEXT PRIMARY KEY,"
-                   " docid TEXT NOT NULL,"
+                   "(docid TEXT NOT NULL,"
                    " diff TEXT NOT NULL,"
                    " username TEXT,"
                    " remote_addr TEXT,"
@@ -216,6 +216,12 @@ def get_md_parser():
 def markdown(text):
     "Template filter to process the text using Marko markdown."
     return jinja2.utils.Markup(get_md_parser().convert(text or ""))
+
+def tojson2(value, indent=2):
+    """Transform to string JSON representation keeping single-quotes
+    and indenting by 2 by default.
+    """
+    return json.dumps(value, indent=indent)
 
 def get_db(app=None):
     "Get the connection to the Sqlite3 database file."

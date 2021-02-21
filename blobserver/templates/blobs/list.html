@@ -4,9 +4,9 @@
   <thead>
     <tr>
       <th>Blob</th>
+      <th>Information</th>
       <th>Size</th>
       <th>Modified</th>
-      <th>Details</th>
       <th>User</th>
     </tr>
   </thead>
@@ -17,12 +17,12 @@
         <a href="{{ url_for('blob.blob', filename=data['filename']) }}">
           {{ data['filename'] }}</a>
       </td>
+      <td>
+        <a href="{{ url_for('blob.info', filename=data['filename']) }}">
+          Information</a>
+      </td>
       <td>{{ data['size'] | filesizeformat }}</td>
       <td class="localtime">{{ data['modified'] }}</td>
-      <td>
-        <a href="{{ url_for('blob.details', filename=data['filename']) }}">
-          Details</a>
-      </td>
       <td>
         {% if g.am_admin %}
         <a href="{{ url_for('user.display', username=data['username']) }}">
