@@ -1,14 +1,18 @@
 {% extends 'base.html' %}
 
-{% block head_title %}Details {{ data['filename'] }}{% endblock %}
+{% block head_title %}Information '{{ data['filename'] }}'{% endblock %}
 
-{% block body_title %}
-Details
-<a href="{{ url_for('blob.blob', filename=data['filename']) }}">
-  {{ data['filename'] }}</a>
-{% endblock %}
+{% block body_title %}Information '{{ data['filename'] }}'{% endblock %}
 
 {% block main %}
+<div class="row">
+  <div class="col-md-2 font-weight-bold text-right">Blob</div>
+  <div class="col-md">
+    <a href="{{ url_for('blob.blob', filename=data['filename']) }}">
+      {{ data['filename'] }}</a>
+  </div>
+</div>
+
 <div class="row">
   <div class="col-md-2 font-weight-bold text-right">Description</div>
   <div class="col-md">

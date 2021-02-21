@@ -75,11 +75,10 @@ class BaseSaver:
         else:
             entry["user_agent"] = os.path.basename(sys.argv[0])
         with flask.g.db:
-            keys = ", ".join([f"'{k}'" for k in entry.keys()])
+            fields = ",".join([f"'{k}'" for k in entry.keys()])
             args = ",".join(["?"] * len(entry))
-            values = list(entry.values())
-            flask.g.db.execute(f"INSERT INTO logs ({keys}) VALUES ({args})",
-                               values)
+            flask.g.db.execute(f"INSERT INTO logs ({fields}) VALUES ({args})",
+                               list(entry.values()))
 
     def diff(self, old, new, stack=None):
         """Find the differences between the old and the new documents.

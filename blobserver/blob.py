@@ -49,8 +49,8 @@ def upload():
             with BlobSaver() as saver:
                 saver["description"] = flask.request.form.get("description")
                 saver["filename"] = infile.filename
-                saver["content"] = infile.read()
                 saver["username"] = flask.g.current_user["username"]
+                saver.set_content(infile.read())
         except ValueError as error:
             return utils.error(error)
         return flask.redirect(
@@ -77,7 +77,7 @@ def blob(filename):
             flask.abort(http.client.NOT_FOUND)
         if not allow_delete(data):
             # Just send error code; appropriate for when used as a service.
-            flask.abort(http.client.FOBRIDDEN)
+            flask.abort(http.client.FORBIDDEN)
         delete_blob(data)
         utils.flash_message(f"Deleted blob {data['filename']}")
         return flask.redirect(
@@ -111,8 +111,7 @@ def update(filename):
                 saver["description"] = flask.request.form.get("description")
                 infile = flask.request.files.get("file")
                 if infile:
-                    saver["filename"] = infile.filename
-                    saver["content"] = infile.read()
+                    saver.set_content(infile.read())
         except ValueError as error:
             return utils.error(error)
         return flask.redirect(
@@ -137,8 +136,16 @@ class BlobSaver(BaseSaver):
 
     LOG_EXCLUDE_PATHS = [["content"], ["modified"]]  # Exclude from log info.
 
+    def set_content(self, content):
+        self["content"] = content
+        self["size"] = len(content)
+        for name in ["md5", "sha256", "sha512"]:
+            hash = hashlib.new(name)
+            hash.update(content)
+            self[name] = hash.hexdigest()
+
     def finalize(self):
-        for key in ["filename", "content", "username"]:
+        for key in ["filename", "username"]:
             if not self.doc.get(key):
                 raise ValueError(f"Invalid blob: {key} not set.")
         if self.doc["filename"].startswith("_"):
@@ -150,50 +157,32 @@ class BlobSaver(BaseSaver):
                 raise ValueError("User's quota cannot accommodate the blob.")
 
     def upsert(self):
+        cursor = flask.g.db.cursor()
         if "content" in self.doc:  # The content has changed; insert or update.
             filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
                                     self.doc["filename"])
             with open(filepath, "wb") as outfile:
                 outfile.write(self.doc["content"])
-            md5 = hashlib.new("md5")
-            md5.update(self.doc["content"])
-            sha256 = hashlib.new("sha256")
-            sha256.update(self.doc["content"])
-            sha512 = hashlib.new("sha512")
-            sha512.update(self.doc["content"])
-            cursor = flask.g.db.cursor()
             rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE"
                                        " filename=?",
                                        (self.doc["filename"],)))
             if rows[0][0] == 0:
-                cursor.execute("INSERT INTO blobs ('iuid', 'filename',"
-                               " 'username', 'description', 'md5', 'sha256',"
-                               " 'sha512', 'size', 'modified', 'created')"
-                               " VALUES (?,?,?,?,?,?,?,?,?,?)",
-                               (self.doc["iuid"],
-                                self.doc["filename"],
-                                flask.g.current_user["username"],
-                                self.doc.get("description"),
-                                md5.hexdigest(),
-                                sha256.hexdigest(),
-                                sha512.hexdigest(),
-                                len(self.doc["content"]),
-                                self.doc["modified"],
-                                self.doc["created"]))
+                keys = ["iuid", "filename", "username", "description", "md5",
+                        "sha256", "sha512", "size", "modified", "created"]
+                fields = ",".join(keys)
+                args = ",".join(["?"] * len(keys))
+                cursor.execute(f"INSERT INTO blobs ({fields}) VALUES ({args})",
+                               [self.doc[k] for k in keys])
             else:
-                cursor.execute("UPDATE blobs SET (description=?, md5=?,"
-                               " sha256=?,sha512=?, size=?, modified=?)"
-                               " WHERE filename=?",
-                               (self.doc.get("description"),
-                                md5.hexdigest(),
-                                sha256.hexdigest(),
-                                sha512.hexdigest(),
-                                len(self.doc["content"]),
-                                self.doc["filename"],
-                                self.doc["modified"]))
+                keys = ["description", "md5", "sha256", "sha512",
+                        "size", "modified"]
+                assigns = ",".join([f"{k}=?" for k in keys])
+                values = [self.doc[k] for k in keys] + [self.doc["filename"]]
+                cursor.execute(f"UPDATE blobs SET {assigns} WHERE filename=?",
+                               values)
         else:  # Only the description has changed; only update is relevant.
-            cursor.execute("UPDATE blobs SET (description=?) WHERE filename=?",
-                           (self.doc.get("description")))
+            cursor.execute("UPDATE blobs SET description=? WHERE filename=?",
+                           (self.doc.get("description"), self.doc["filename"]))
 
 def get_blob_data(filename):
     """Return the data (not the content) for the blob.
@@ -222,16 +211,16 @@ def delete_blob(data):
         flask.g.db.execute("DELETE FROM logs WHERE docid=?", (data["iuid"],))
         flask.g.db.execute("DELETE FROM blobs WHERE filename=?",
                            (data["filename"],))
-        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
+        filepath = os.path.join(flask.current_app.config["STORAGE_DIRPATH"],
                                 data["filename"])
         os.remove(filepath)
 
 def allow_update(data):
     if flask.g.am_admin: return True
-    if flask.current_user["username"] == data["username"]: return True
+    if flask.g.current_user["username"] == data["username"]: return True
     return False
 
 def allow_delete(data):
     if flask.g.am_admin: return True
-    if flask.current_user["username"] == data["username"]: return True
+    if flask.g.current_user["username"] == data["username"]: return True
     return False
