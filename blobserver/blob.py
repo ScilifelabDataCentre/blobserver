@@ -139,9 +139,7 @@ def get_blob_data(filename):
     """
     if filename.startswith("_"): return None
     cursor = flask.g.db.cursor()
-    rows = list(cursor.execute("SELECT iuid, filename, username, description,"
-                               " md5, sha256, sha512, size, created, modified"
-                               " FROM blobs WHERE filename=?",
+    rows = list(cursor.execute("SELECT * FROM blobs WHERE filename=?",
                                (filename,)))
     if rows:
         return dict(zip(rows[0].keys(), rows[0]))
@@ -151,9 +149,7 @@ def get_blob_data(filename):
 def get_most_recent_blobs():
     "Return the most recently modified blobs."
     cursor = flask.g.db.cursor()
-    rows = list(cursor.execute("SELECT iuid, filename, username, description,"
-                               " md5, sha256, sha512, size, created, modified"
-                               " FROM blobs ORDER BY modified DESC"
-                               " LIMIT ?",
-                               (10,)))
+    rows = list(cursor.execute("SELECT * FROM blobs"
+                               " ORDER BY modified DESC LIMIT ?",
+                               (flask.current_app.config["MOST_RECENT"],)))
     return [dict(zip(r.keys(), r)) for r in rows]

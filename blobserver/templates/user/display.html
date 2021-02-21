@@ -21,15 +21,19 @@
     <td>{{ user['status'] }}</td>
   </tr>
   <tr>
-    <th class="text-right">Total number blobs</th>
-    <td>{{ user['blobs_count'] }}</td>
+    <th class="text-right">Total number</th>
+    <td>
+      <a href="{{ url_for('blobs.user', username=user['username']) }}"
+         role="button" class="btn btn-primary btn-sm">
+        {{ user['blobs_count'] }} blobs</a>
+    </td>
   </tr>
   <tr>
-    <th class="text-right">Total size blobs</th>
+    <th class="text-right">Total storage</th>
     <td>{{ user['blobs_size'] | filesizeformat }}</td>
   </tr>
   <tr>
-    <th class="text-right">Quota</th>
+    <th class="text-right">Storage quota</th>
     <td>
         {% if user['quota'] %}
         {{ user['quota'] | filesizeformat }}

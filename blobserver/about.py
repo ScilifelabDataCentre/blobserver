@@ -4,7 +4,6 @@ import sqlite3
 import sys
 
 import flask
-import jsonschema
 
 import blobserver
 from blobserver import constants
@@ -26,8 +25,6 @@ def get_software():
         ("Python", f"{v.major}.{v.minor}.{v.micro}", "https://www.python.org/"),
         ("Flask", flask.__version__, "http://flask.pocoo.org/"),
         ("Sqlite3", sqlite3.version, "https://www.sqlite.org/index.html"),
-        ("jsonschema", jsonschema.__version__, 
-         "https://pypi.org/project/jsonschema"),
         ("Bootstrap", constants.BOOTSTRAP_VERSION, "https://getbootstrap.com/"),
         ("jQuery", constants.JQUERY_VERSION, "https://jquery.com/"),
         ("DataTables", constants.DATATABLES_VERSION, "https://datatables.net/"),

@@ -12,7 +12,9 @@
       <th>Email</th>
       <th>Role</th>
       <th>Status</th>
-      <th>Quota</th>
+      <th>Blobs</th>
+      <th>Total storage</th>
+      <th>Storage quota</th>
       <th>Modified</th>
     </tr>
   </thead>
@@ -34,6 +36,12 @@
         {{ user['status'] }}
         {% endif %}
       </td>
+      <td>
+        <a href="{{ url_for('blobs.user', username=user['username']) }}"
+           role="button" class="btn btn-primary btn-sm">
+          {{ user['blobs_count'] }} blobs</a>
+      </td>
+      <td>{{ user['blobs_size'] | filesizeformat }}</td>
       <td>
         {% if user['quota'] %}
         {{ user['quota'] | filesizeformat }}
