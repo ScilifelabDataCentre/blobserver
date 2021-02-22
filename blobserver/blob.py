@@ -103,6 +103,44 @@ def blob(filename):
         return flask.redirect(
             flask.url_for("blobs.user", username=data["username"]))
 
+@blueprint.route("/<filename>/description", methods=["GET", "PUT", "DELETE"])
+def description(filename):
+    "Programmatic interface to the description for a blob."
+    data = get_blob_data(filename)
+    if not data:
+        # Just send error code; appropriate for programmatic use.
+        flask.abort(http.client.NOT_FOUND)
+
+    if utils.http_GET():
+        response = flask.make_response(doc.get("description") or "")
+        response.headers.set("Content-Type", "text/plain; charset=utf-8")
+        return response
+
+    elif utils.http_PUT():
+        if data["username"] != flask.g.current_user["username"]:
+            flask.abort(http.client.FORBIDDEN)
+        try:
+            with BlobSaver(data) as saver:
+                if flask.request.data:
+                    saver["description"] = flask.request.data.decode('utf-8')
+                else:
+                    saver["description"] = None
+        except ValueError:
+            flask.abort(http.client.BAD_REQUEST)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=saver["filename"]))
+
+    elif utils.http_DELETE():
+        if data["username"] != flask.g.current_user["username"]:
+            flask.abort(http.client.FORBIDDEN)
+        try:
+            with BlobSaver(data) as saver:
+                saver["description"] = None
+        except ValueError:
+            flask.abort(http.client.BAD_REQUEST)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=saver["filename"]))
+
 @blueprint.route("/<filename>/info")
 def info(filename):
     data = get_blob_data(filename)
@@ -172,7 +210,8 @@ class BlobSaver(BaseSaver):
             raise ValueError("Filename is not allowed to start with"
                              " an underscore character.")
         if flask.g.current_user["quota"]:
-            if len(self.doc["content"]) + flask.g.current_user["blobs_size"] > \
+            if len(self.doc.get("content", [])) + \
+               flask.g.current_user["blobs_size"] > \
                flask.g.current_user["quota"]:
                 raise ValueError("User's quota cannot accommodate the blob.")
 
