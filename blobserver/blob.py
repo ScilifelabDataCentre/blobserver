@@ -61,22 +61,42 @@ def blob(filename):
     if utils.http_GET():
         data = get_blob_data(filename)
         if not data:
-            # Just send error code; appropriate for when used as a service.
+            # Just send error code; appropriate for programmatic use.
             flask.abort(http.client.NOT_FOUND)
         return flask.send_from_directory(
             flask.current_app.config["STORAGE_DIRPATH"], filename)
 
     elif utils.http_PUT():
-        # Create a new blob.
-        raise NotImplementedError
+        # Create a new blob; for programmatic use.
+        if not flask.g.current_user:
+            flask.abort(http.client.UNAUTHORIZED)
+        data = get_blob_data(filename)
+        if data:
+            if data["username"] != flask.g.current_user["username"]:
+                flask.abort(http.client.FORBIDDEN)
+            try:
+                with BlobSaver(data) as saver:
+                    saver.set_content(flask.request.data)
+            except ValueError:
+                flask.abort(http.client.BAD_REQUEST)
+        else:
+            try:
+                with BlobSaver() as saver:
+                    saver["filename"] = filename
+                    saver.set_content(flask.request.data)
+                    saver["username"] = flask.g.current_user["username"]
+            except ValueError:
+                flask.abort(http.client.BAD_REQUEST)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=saver["filename"]))
 
     elif utils.http_DELETE():
         data = get_blob_data(filename)
         if not data:
-            # Just send error code; appropriate for when used as a service.
+            # Just send error code; appropriate for programmatic use.
             flask.abort(http.client.NOT_FOUND)
         if not allow_delete(data):
-            # Just send error code; appropriate for when used as a service.
+            # Just send error code; appropriate for programmatic use.
             flask.abort(http.client.FORBIDDEN)
         delete_blob(data)
         utils.flash_message(f"Deleted blob {data['filename']}")
@@ -172,12 +192,12 @@ class BlobSaver(BaseSaver):
                 fields = ",".join(keys)
                 args = ",".join(["?"] * len(keys))
                 cursor.execute(f"INSERT INTO blobs ({fields}) VALUES ({args})",
-                               [self.doc[k] for k in keys])
+                               [self.doc.get(k) for k in keys])
             else:
                 keys = ["description", "md5", "sha256", "sha512",
                         "size", "modified"]
                 assigns = ",".join([f"{k}=?" for k in keys])
-                values = [self.doc[k] for k in keys] + [self.doc["filename"]]
+                values = [self.doc.get(k) for k in keys] +[self.doc["filename"]]
                 cursor.execute(f"UPDATE blobs SET {assigns} WHERE filename=?",
                                values)
         else:  # Only the description has changed; only update is relevant.
