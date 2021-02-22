@@ -68,17 +68,17 @@ def blob(filename):
 
     elif utils.http_PUT():
         # Create a new blob; for programmatic use.
-        if not flask.g.current_user:
-            flask.abort(http.client.UNAUTHORIZED)
         data = get_blob_data(filename)
         if data:
-            if data["username"] != flask.g.current_user["username"]:
-                flask.abort(http.client.FORBIDDEN)
+            if not allow_update(data):
+                flask.abort(http.client.UNAUTHORIZED)
             try:
                 with BlobSaver(data) as saver:
                     saver.set_content(flask.request.data)
             except ValueError:
                 flask.abort(http.client.BAD_REQUEST)
+        elif not flask.g.current_user:
+            flask.abort(http.client.UNAUTHORIZED)
         else:
             try:
                 with BlobSaver() as saver:
@@ -117,7 +117,7 @@ def description(filename):
         return response
 
     elif utils.http_PUT():
-        if data["username"] != flask.g.current_user["username"]:
+        if not allow_update(data):
             flask.abort(http.client.FORBIDDEN)
         try:
             with BlobSaver(data) as saver:
@@ -131,7 +131,7 @@ def description(filename):
             flask.url_for("blob.info", filename=saver["filename"]))
 
     elif utils.http_DELETE():
-        if data["username"] != flask.g.current_user["username"]:
+        if not allow_delete(data):
             flask.abort(http.client.FORBIDDEN)
         try:
             with BlobSaver(data) as saver:
@@ -146,10 +146,61 @@ def info(filename):
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
+    if allow_update(data):
+        accesskey = flask.g.current_user.get("accesskey")
+        if accesskey:
+            c_url = flask.url_for('blob.blob',
+                                  filename=data['filename'],
+                                  _external=True)
+            d_url = flask.url_for('blob.description',
+                                  filename=data['filename'],
+                                  _external=True)
+            commands = {
+                "curl": {
+                    "content": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+                    ' --upload-file path-to-content-file.ext',
+                    "description": f'curl {d_url} -H "x-accesskey: {accesskey}"' \
+                    ' --upload-file path-to-description-file.md',
+                    "delete": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+                    " -X DELETE"},
+                "requests": {
+                    "content": f"""import requests
+
+url = "{c_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+with open("path-to-content-file.ext", "rb") as infile:
+    data = infile.read()
+
+response = requests.put(url, headers=headers, data=data)
+print(response.status_code)    # Outputs 200
+""",
+                    "description": f"""import requests
+
+url = "{d_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+with open("path-to-description-file.md", "rb") as infile:
+    data = infile.read()
+
+response = requests.put(url, headers=headers, data=data)
+print(response.status_code)    # Outputs 200
+""",
+                    "delete": f"""import requests
+
+url = "{c_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+response = requests.delete(url, headers=headers)
+print(response.status_code)    # Outputs 200
+"""
+                }
+            }
+        
+    else:
+        commands = None
     return flask.render_template("blob/info.html", 
                                  data=data,
                                  allow_update=allow_update(data),
-                                 allow_delete=allow_delete(data))
+                                 allow_delete=allow_delete(data),
+                                 commands=commands)
 
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required

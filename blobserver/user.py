@@ -407,6 +407,12 @@ def am_admin_or_self(user):
     if flask.g.am_admin: return True
     return flask.g.current_user["username"] == user["username"]
 
+def am_admin_and_not_self(user):
+    "Is the current user admin and not the same as the given user?"
+    if not flask.g.current_user: return False
+    return flask.g.am_admin and \
+        flask.g.current_user["username"] != user["username"]
+
 def user_blobs_count(user):
     "Return the number of blobs the user has."
     cursor = flask.g.db.cursor()

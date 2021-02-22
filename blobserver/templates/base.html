@@ -200,6 +200,8 @@
     <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
     <script src="{{ url_for('static', filename='jquery.localtime-0.9.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='clipboard.min.js') }}"></script>
+    <script>var clipboard = new ClipboardJS('.clipboard');</script>
     {% block javascript %}
     {% endblock %}
   </body>
