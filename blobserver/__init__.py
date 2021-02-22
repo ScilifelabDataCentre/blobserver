@@ -2,7 +2,7 @@
 
 import re
 
-__version__ = "0.6.5"
+__version__ = "0.6.6"
 
 class Constants:
     VERSION     = __version__
@@ -12,6 +12,7 @@ class Constants:
     BOOTSTRAP_VERSION  = "4.6.0"
     JQUERY_VERSION     = "3.5.1"
     DATATABLES_VERSION = "1.10.23"
+    CLIPBOARD_VERSION  = "2.0.6"
 
     ID_RX    = re.compile(r"^[a-z][a-z0-9_-]*$", re.I)
     IUID_RX  = re.compile(r"^[a-f0-9]{32,32}$", re.I)

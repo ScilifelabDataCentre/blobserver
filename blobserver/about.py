@@ -28,6 +28,7 @@ def get_software():
         ("Bootstrap", constants.BOOTSTRAP_VERSION, "https://getbootstrap.com/"),
         ("jQuery", constants.JQUERY_VERSION, "https://jquery.com/"),
         ("DataTables", constants.DATATABLES_VERSION, "https://datatables.net/"),
+        ("clipboard.js", constants.CLIPBOARD_VERSION, "https://clipboardjs.com/")
     ]
 
 @blueprint.route("/settings")
