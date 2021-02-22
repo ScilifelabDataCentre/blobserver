@@ -87,11 +87,9 @@ def register():
                 saver.set_role(constants.USER)
                 saver.set_quota(flask.current_app.config["DEFAULT_QUOTA"])
                 password = flask.request.form.get("password")
-                if password:
-                    confirm = flask.request.form.get("confirm_password")
-                    if password != confirm:
-                        raise ValueError("Password differs from"
-                                         " confirmed password.")
+                confirm = flask.request.form.get("confirm_password")
+                if password != confirm:
+                    raise ValueError("Password confirmation failed.")
                 saver.set_password(password)
                 saver.set_status(constants.ENABLED)
             user = saver.doc
@@ -110,29 +108,24 @@ def password():
 
     elif utils.http_POST():
         try:
-            code = ""
             try:
                 username = flask.request.form.get("username") or ""
                 if not username: raise ValueError
                 user = get_user(username=username)
                 if user is None: raise ValueError
                 if am_admin_and_not_self(user):
-                    pass        # No check for either code or current password.
+                    pass        # No check for current password.
                 else:
                     password = flask.request.form.get("current_password") or ""
                     if not check_password_hash(user["password"], password):
                         raise ValueError
             except ValueError:
                 raise ValueError("No such user or wrong password.")
-            password = flask.request.form.get("password") or ""
-            if len(password) < flask.current_app.config["MIN_PASSWORD_LENGTH"]:
-                raise ValueError("Too short password.")
+            password = flask.request.form.get("password")
             if password != flask.request.form.get("confirm_password"):
                 raise ValueError("Wrong password entered; confirm failed.")
         except ValueError as error:
-            return utils.error(
-                error,
-                flask.url_for(".password", username=username, code=code))
+            return utils.error(error, flask.url_for(".password"))
         with UserSaver(user) as saver:
             saver.set_password(password)
         utils.get_logger().info(f"password user {user['username']}")
@@ -234,7 +227,7 @@ def enable(username):
     user = get_user(username=username)
     if user is None:
         return utils.error("No such user.")
-    if user["username"].lower() == flask.g.current_user["username"].lower():
+    if user["username"] == flask.g.current_user["username"]:
         return utils.error("You cannot enable yourself.")
     with UserSaver(user) as saver:
         saver.set_status(constants.ENABLED)
@@ -248,7 +241,7 @@ def disable(username):
     user = get_user(username=username)
     if user is None:
         return utils.error("No such user.")
-    if user["username"].lower() == flask.g.current_user["username"].lower():
+    if user["username"] == flask.g.current_user["username"]:
         return utils.error("You cannot disable yourself.")
     with UserSaver(user) as saver:
         saver.set_status(constants.DISABLED)
@@ -304,16 +297,14 @@ class UserSaver(BaseSaver):
         assert value is None or value >= 0
         self.doc["quota"] = value
 
-    def set_password(self, password=None):
-        "Set the password; a one-time code if no password provided."
-        config = flask.current_app.config
-        if password is None:
-            self.doc["password"] = "code:%s" % utils.get_iuid()
-        else:
-            if len(password) < config["MIN_PASSWORD_LENGTH"]:
-                raise ValueError("Password too short.")
-            self.doc["password"] = generate_password_hash(
-                password, salt_length=config["SALT_LENGTH"])
+    def set_password(self, password):
+        "Set the password."
+        if not password:
+            raise ValueError("No password given.")
+        if len(password) < flask.current_app.config["MIN_PASSWORD_LENGTH"]:
+            raise ValueError("Password too short.")
+        self.doc["password"] = generate_password_hash(
+            password, salt_length=flask.current_app.config["SALT_LENGTH"])
 
     def set_accesskey(self):
         "Set a new access key."
@@ -414,12 +405,7 @@ def am_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"
     if not flask.g.current_user: return False
     if flask.g.am_admin: return True
-    return flask.g.current_user["username"].lower() == user["username"].lower()
-
-def am_admin_and_not_self(user):
-    "Is the current user admin, but not the same as the given user?"
-    return flask.g.am_admin and \
-        flask.g.current_user["username"].lower() != user["username"].lower()
+    return flask.g.current_user["username"] == user["username"]
 
 def user_blobs_count(user):
     "Return the number of blobs the user has."

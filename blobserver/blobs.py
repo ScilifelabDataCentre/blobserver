@@ -26,3 +26,17 @@ def user(username):
     rows = cursor.execute("SELECT * FROM blobs WHERE username=?", (username,))
     blobs = [dict(zip(row.keys(), row)) for row in rows]
     return flask.render_template("blobs/user.html", user=user, blobs=blobs)
+
+@blueprint.route("/search")
+def search():
+    "A very simple direct search of a single term."
+    term = flask.request.args.get("term")
+    if term:
+        cursor = flask.g.db.cursor()
+        wildterm = f"%{term}%"
+        rows = cursor.execute("SELECT * FROM blobs WHERE filename LIKE ?"
+                              " OR description LIKE ?", (wildterm, wildterm))
+        blobs = [dict(zip(row.keys(), row)) for row in rows]
+    else:
+        blobs = []
+    return flask.render_template("blobs/search.html", term=term, blobs=blobs)

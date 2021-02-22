@@ -28,7 +28,8 @@ blobserver.blob.init(app)
 def setup_template_context():
     "Add useful stuff to the global context of Jinja2 templates."
     return dict(constants=constants,
-                csrf_token=utils.csrf_token)
+                csrf_token=utils.csrf_token,
+                get_user=blobserver.user.get_user)
 
 @app.before_request
 def prepare():

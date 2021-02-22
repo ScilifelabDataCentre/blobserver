@@ -22,6 +22,7 @@ def init(app):
     - Create the logs table in the database.
     """
     app.add_template_filter(markdown)
+    app.add_template_filter(user_link)
     app.add_template_filter(tojson2)
     db = get_db(app)
     with db:
@@ -212,6 +213,15 @@ def get_md_parser():
 def markdown(text):
     "Template filter to process the text using Marko markdown."
     return jinja2.utils.Markup(get_md_parser().convert(text or ""))
+
+def user_link(user):
+    "Template filter for user output by name, with link if allowed to view."
+    from blobserver.user import am_admin_or_self
+    if am_admin_or_self(user):
+        url = flask.url_for('user.display', username=user['username'])
+        return jinja2.utils.Markup(f'<a href="{url}">{user["username"]}</a>')
+    else:
+        return user["username"]
 
 def tojson2(value, indent=2):
     """Transform to string JSON representation keeping single-quotes
