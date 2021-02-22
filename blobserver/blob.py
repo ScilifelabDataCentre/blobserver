@@ -58,7 +58,7 @@ def upload():
 
 @blueprint.route("/<filename>", methods=["GET", "POST", "PUT", "DELETE"])
 def blob(filename):
-    if utils.http_GET():
+    if utils.http_GET() or utils.http_HEAD():
         data = get_blob_data(filename)
         if not data:
             # Just send error code; appropriate for programmatic use.
@@ -103,6 +103,8 @@ def blob(filename):
         return flask.redirect(
             flask.url_for("blobs.user", username=data["username"]))
 
+    return flask.abort(http.client.METHOD_NOT_ALLOWED)
+
 @blueprint.route("/<filename>/description", methods=["GET", "PUT", "DELETE"])
 def description(filename):
     "Programmatic interface to the description for a blob."
@@ -111,7 +113,7 @@ def description(filename):
         # Just send error code; appropriate for programmatic use.
         flask.abort(http.client.NOT_FOUND)
 
-    if utils.http_GET():
+    if utils.http_GET() or utils.http_HEAD():
         response = flask.make_response(doc.get("description") or "")
         response.headers.set("Content-Type", "text/plain; charset=utf-8")
         return response
@@ -140,6 +142,8 @@ def description(filename):
             flask.abort(http.client.BAD_REQUEST)
         return flask.redirect(
             flask.url_for("blob.info", filename=saver["filename"]))
+
+    return flask.abort(http.client.METHOD_NOT_ALLOWED)
 
 @blueprint.route("/<filename>/info")
 def info(filename):

@@ -149,6 +149,10 @@ def http_GET():
     "Is the HTTP method GET?"
     return flask.request.method == "GET"
 
+def http_HEAD():
+    "Is the HTTP method HEAD?"
+    return flask.request.method == "HEAD"
+
 def http_POST(csrf=True):
     "Is the HTTP method POST? Check whether used for method tunneling."
     if flask.request.method != "POST": return False
