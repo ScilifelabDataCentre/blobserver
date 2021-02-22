@@ -119,7 +119,7 @@
   <div class="card-header">
     <h4 class="ml-5">Python scripts using 'requests'</h4>
     <small class="text-muted">
-      <strong>requests</strong> is a Python library for HTTP. This is
+      <strong>requests</strong> is a Python library for HTTP. It is
       the <i>de facto</i> standard for Python. It must be downloaded from
       <a target="_blank" href="https://pypi.org/project/requests/">PyPi</a>
       since it is not part of the built-in Python libraries.
@@ -180,13 +180,20 @@
   </div>
 </div>
 {% else %}
-<i class="my-3">
-  You need to set the access key of your account to view useful code snippets.
-  Go to 
-  <a href="{{ url_for('user.edit', username=g.current_user['username']) }}">
-    your user account edit page</a>,
-  click the checkbox, save and return to here.
-</i>
+<div class="card my-4">
+  <div class="card-body">
+    <p>
+      You need to set the access key of your account to view some useful
+      code snippets for updating the blob.
+    </p>
+    <p>
+      Go to
+      <a href="{{ url_for('user.edit', username=g.current_user['username']) }}">
+        your user account edit page</a>,
+      click the checkbox, save and return to here.
+    </p>
+  </div>
+</div>
 {% endif %} {# if g.current_user.get('accesskey') #}
 {% endif %} {# if allow_edit #}
 
