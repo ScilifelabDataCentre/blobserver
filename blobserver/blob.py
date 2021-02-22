@@ -146,59 +146,11 @@ def info(filename):
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
-    accesskey = flask.g.current_user.get("accesskey")
-    if allow_update(data) and accesskey:
-        c_url = flask.url_for('blob.blob',
-                              filename=data['filename'],
-                              _external=True)
-        d_url = flask.url_for('blob.description',
-                              filename=data['filename'],
-                              _external=True)
-        commands = {
-            "curl": {
-                "content": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
-                ' --upload-file path-to-content-file.ext',
-                "description": f'curl {d_url} -H "x-accesskey: {accesskey}"' \
-                ' --upload-file path-to-description-file.md',
-                "delete": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
-                " -X DELETE"},
-            "requests": {
-                "content": f"""import requests
-
-url = "{c_url}"
-headers = {{"x-accesskey": "{accesskey}"}}
-with open("path-to-content-file.ext", "rb") as infile:
-    data = infile.read()
-
-response = requests.put(url, headers=headers, data=data)
-print(response.status_code)    # Outputs 200
-""",
-                "description": f"""import requests
-
-url = "{d_url}"
-headers = {{"x-accesskey": "{accesskey}"}}
-with open("path-to-description-file.md", "rb") as infile:
-    data = infile.read()
-
-response = requests.put(url, headers=headers, data=data)
-print(response.status_code)    # Outputs 200
-""",
-                "delete": f"""import requests
-
-url = "{c_url}"
-headers = {{"x-accesskey": "{accesskey}"}}
-response = requests.delete(url, headers=headers)
-print(response.status_code)    # Outputs 200
-"""
-            }
-        }
-    else:
-        commands = None
     return flask.render_template("blob/info.html", 
                                  data=data,
                                  allow_update=allow_update(data),
                                  allow_delete=allow_delete(data),
-                                 commands=commands)
+                                 commands=get_commands(data))
 
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
@@ -225,7 +177,6 @@ def update(filename):
             flask.url_for("blob.info", filename=data["filename"]))
 
 @blueprint.route("/<filename>/logs")
-@utils.login_required
 def logs(filename):
     "Display the log records of the given blob."
     data = get_blob_data(filename)
@@ -324,11 +275,63 @@ def delete_blob(data):
         os.remove(filepath)
 
 def allow_update(data):
+    if not flask.g.current_user: return False
     if flask.g.am_admin: return True
     if flask.g.current_user["username"] == data["username"]: return True
     return False
 
 def allow_delete(data):
+    if not flask.g.current_user: return False
     if flask.g.am_admin: return True
     if flask.g.current_user["username"] == data["username"]: return True
     return False
+
+def get_commands(data):
+    if not flask.g.current_user: return None
+    if not allow_update(data): return None
+    accesskey = flask.g.current_user.get("accesskey")
+    if not accesskey: return None
+    c_url = flask.url_for('blob.blob',
+                          filename=data['filename'],
+                          _external=True)
+    d_url = flask.url_for('blob.description',
+                          filename=data['filename'],
+                          _external=True)
+    return {
+        "curl": {
+            "content": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+            ' --upload-file path-to-content-file.ext',
+            "description": f'curl {d_url} -H "x-accesskey: {accesskey}"' \
+            ' --upload-file path-to-description-file.md',
+            "delete": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+            " -X DELETE"},
+        "requests": {
+            "content": f"""import requests
+
+url = "{c_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+with open("path-to-content-file.ext", "rb") as infile:
+    data = infile.read()
+
+response = requests.put(url, headers=headers, data=data)
+print(response.status_code)    # Outputs 200
+""",
+                "description": f"""import requests
+
+url = "{d_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+with open("path-to-description-file.md", "rb") as infile:
+    data = infile.read()
+
+response = requests.put(url, headers=headers, data=data)
+print(response.status_code)    # Outputs 200
+""",
+                "delete": f"""import requests
+
+url = "{c_url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+response = requests.delete(url, headers=headers)
+print(response.status_code)    # Outputs 200
+"""
+        }
+    }

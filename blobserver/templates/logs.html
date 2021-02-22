@@ -10,8 +10,10 @@
     <tr>
       <th>Timestamp</th>
       <th>User</th>
+      {% if g.current_user %}
       <th>Remote address</th>
       <th>User agent</th>
+      {% endif %}
       <th>Diff</th>
     </tr>
   </thead>
@@ -20,8 +22,10 @@
     <tr>
       <td class="localtime">{{ log['timestamp'] }}</td>
       <td>{{ log['username'] or '-' }}</td>
+      {% if g.current_user %}
       <td>{{ log['remote_addr'] or '-' }}</td>
       <td>{{ log['user_agent'] or '-' }}</td>
+      {% endif %}
       <td><pre>{{ log['diff'] | tojson2 }}</pre></td>
     </tr>
     {% endfor %}

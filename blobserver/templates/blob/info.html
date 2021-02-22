@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block head_title %}Information '{{ data['filename'] }}'{% endblock %}
+{% block head_title %}Information for {{ data['filename'] }}{% endblock %}
 
-{% block body_title %}Information '{{ data['filename'] }}'{% endblock %}
+{% block body_title %}Information for {{ data['filename'] }}{% endblock %}
 
 {% block main %}
 <div class="row">
@@ -53,21 +53,16 @@
 {% if allow_update %}
 {% if g.current_user.get('accesskey') %}
 <div class="card my-4">
-  <div class="card-header">
-    <h4 class="ml-5">curl commands</h4>
-    <small class="text-muted">
-      <strong>curl</strong> is a command-line utility to transfer data
-      to/from web servers. It is available for most computer operating
-      systems.
-      See <a target="_blank" href="https://curl.se/">curl.se</a>.
-    </small>
-  </div>
+  {% include 'blob/curl.html' %}
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <h6 class="ml-5">
           Update the content of this blob by uploading a file.
         </h6>
+        <p class="small">
+          Note that the filename of the uploaded file does not matter.
+        </p>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -81,10 +76,13 @@
   </div>
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <h6 class="ml-5">
           Update the description of this blob by uploading a Markdown file.
         </h6>
+        <p class="small">
+          Note that the filename of the uploaded file does not matter.
+        </p>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -98,10 +96,8 @@
   </div>
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
-        <h6 class="ml-5">
-          Delete this blob.
-        </h6>
+      <div class="col-md-10">
+        <h6 class="ml-5">Delete this blob.</h6>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -116,23 +112,16 @@
 </div>
 
 <div class="card my-4">
-  <div class="card-header">
-    <h4 class="ml-5">Python scripts using 'requests'</h4>
-    <small class="text-muted">
-      <strong>requests</strong> is a Python library for HTTP. It is
-      the <i>de facto</i> standard for Python. It must be downloaded from
-      <a target="_blank" href="https://pypi.org/project/requests/">PyPi</a>
-      since it is not part of the built-in Python libraries.
-      See <a target="_blank" href="https://requests.readthedocs.io/en/master/">
-        Requests: HTTP for Humans™</a>.
-    </small>
-  </div>
+  {% include 'blob/requests.html' %}
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <h6 class="ml-5">
           Update the content of this blob by uploading a file.
         </h6>
+        <p class="small">
+          Note that the filename of the uploaded file does not matter.
+        </p>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -144,12 +133,16 @@
     </div>
     <pre class="bg-light p-2 my-1 border rounded">{{ commands['requests']['content'] }}</pre>
   </div>
+  
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <h6 class="ml-5">
           Update the description of this blob by uploading a Markdown file.
         </h6>
+        <p class="small">
+          Note that the filename of the uploaded file does not matter.
+        </p>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -161,12 +154,11 @@
     </div>
     <pre class="bg-light p-2 my-1 border rounded">{{ commands['requests']['description'] }}</pre>
   </div>
+
   <div class="card-body">
     <div class="row">
-      <div class="col-md-8">
-        <h6 class="ml-5">
-          Delete this blob.
-        </h6>
+      <div class="col-md-10">
+        <h6 class="ml-5">Delete this blob.</h6>
       </div>
       <div class="col-md text-right">
         <button type="button"
@@ -179,11 +171,12 @@
     <pre class="bg-light p-2 my-1 border rounded">{{ commands['requests']['delete'] }}</pre>
   </div>
 </div>
+
 {% else %}
 <div class="card my-4">
   <div class="card-body">
     <p>
-      You need to set the access key of your account to view some useful
+      You need to set the access key of your account to see some useful
       code snippets for updating the blob.
     </p>
     <p>

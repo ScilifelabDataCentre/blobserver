@@ -14,7 +14,9 @@ def all():
     cursor = flask.g.db.cursor()
     rows = cursor.execute("SELECT * FROM blobs")
     blobs = [dict(zip(row.keys(), row)) for row in rows]
-    return flask.render_template("blobs/all.html", blobs=blobs)
+    return flask.render_template("blobs/all.html",
+                                 blobs=blobs,
+                                 commands=get_commands())
 
 @blueprint.route("/user/<username>")
 def user(username):
@@ -25,7 +27,10 @@ def user(username):
     cursor = flask.g.db.cursor()
     rows = cursor.execute("SELECT * FROM blobs WHERE username=?", (username,))
     blobs = [dict(zip(row.keys(), row)) for row in rows]
-    return flask.render_template("blobs/user.html", user=user, blobs=blobs)
+    return flask.render_template("blobs/user.html",
+                                 user=user,
+                                 blobs=blobs,
+                                 commands=get_commands())
 
 @blueprint.route("/search")
 def search():
@@ -40,3 +45,27 @@ def search():
     else:
         blobs = []
     return flask.render_template("blobs/search.html", term=term, blobs=blobs)
+
+def get_commands():
+    if not flask.g.current_user: return None
+    accesskey = flask.g.current_user.get("accesskey")
+    if not accesskey: return None
+    url = flask.url_for('blob.blob',
+                        filename='blob-filename.ext',
+                        _external=True)
+    return {
+        "curl": {
+            "create": f'curl {url} -H "x-accesskey: {accesskey}"' \
+            ' --upload-file path-to-content-file.ext'},
+        "requests": {
+            "create": f"""import requests
+
+url = "{url}"
+headers = {{"x-accesskey": "{accesskey}"}}
+with open("path-to-content-file.ext", "rb") as infile:
+    data = infile.read()
+
+response = requests.put(url, headers=headers, data=data)
+print(response.status_code)    # Outputs 200
+"""}
+    }
