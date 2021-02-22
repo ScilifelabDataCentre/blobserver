@@ -13,15 +13,15 @@ DEFAULT_SETTINGS = dict(
     SERVER_NAME = "127.0.0.1:5009",
     SITE_NAME = "blobserver",
     SITE_STATIC_DIRPATH = None,
-    SITE_ICON = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
-    SITE_LOGO = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
+    SITE_ICON = None,           # Name of file in 'SITE_STATIC_DIRPATH'
+    SITE_LOGO = None,           # Name of file in 'SITE_STATIC_DIRPATH'
     DEBUG = False,
     LOG_DEBUG = False,
     LOG_NAME = "blobserver",
     LOG_FILEPATH = None,
     LOG_ROTATING = 0,           # Number of backup rotated log files, if any.
     LOG_FORMAT = "%(levelname)-10s %(asctime)s %(message)s",
-    HOST_LOGO = None,           # Filename, must be in 'SITE_STATIC_DIRPATH'
+    HOST_LOGO = None,           # Name of file in 'SITE_STATIC_DIRPATH'
     HOST_NAME = None,
     HOST_URL = None,
     SECRET_KEY = None,          # Must be set in 'settings.json'
@@ -31,15 +31,7 @@ DEFAULT_SETTINGS = dict(
     MOST_RECENT = 50,
     MIN_PASSWORD_LENGTH = 6,
     PERMANENT_SESSION_LIFETIME = 7 * 24 * 60 * 60, # seconds; 1 week
-    DEFAULT_QUOTA = 104857600,
-    MAIL_SERVER = "localhost",
-    MAIL_PORT = 25,
-    MAIL_USE_TLS = False,
-    MAIL_USERNAME = None,
-    MAIL_PASSWORD = None,
-    MAIL_DEFAULT_SENDER = None,
-    USER_ENABLE_IMMEDIATELY = False,
-    USER_ENABLE_EMAIL_WHITELIST = [], # List of fnmatch expressions
+    DEFAULT_QUOTA = 104857600
 )
 
 def init(app):
@@ -68,15 +60,7 @@ def init(app):
 
     # Modify the configuration from environment variables.
     for key, convert in [("DEBUG", utils.to_bool),
-                         ("SECRET_KEY", str),
-                         ("COUCHDB_URL", str),
-                         ("COUCHDB_USERNAME", str),
-                         ("COUCHDB_PASSWORD", str),
-                         ("MAIL_SERVER", str),
-                         ("MAIL_USE_TLS", utils.to_bool),
-                         ("MAIL_USERNAME", str),
-                         ("MAIL_PASSWORD", str),
-                         ("MAIL_DEFAULT_SENDER", str)]:
+                         ("SECRET_KEY", str)]:
         try:
             app.config[key] = convert(os.environ[key])
         except (KeyError, TypeError, ValueError):

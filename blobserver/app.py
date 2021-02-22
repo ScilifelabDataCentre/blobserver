@@ -23,7 +23,6 @@ blobserver.config.init(app)
 utils.init(app)
 blobserver.user.init(app)
 blobserver.blob.init(app)
-utils.mail.init_app(app)
 
 @app.context_processor
 def setup_template_context():

@@ -5,7 +5,6 @@ import http.client
 import json
 
 import flask
-import flask_mail
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from blobserver import constants
@@ -74,6 +73,7 @@ def logout():
     return flask.redirect(flask.url_for("home"))
 
 @blueprint.route("/register", methods=["GET", "POST"])
+@utils.admin_required
 def register():
     "Register a new user account."
     if utils.http_GET():
@@ -86,90 +86,18 @@ def register():
                 saver.set_email(flask.request.form.get("email"))
                 saver.set_role(constants.USER)
                 saver.set_quota(flask.current_app.config["DEFAULT_QUOTA"])
-                if flask.g.am_admin:
-                    password = flask.request.form.get("password") or None
-                    if password:
-                        confirm = flask.request.form.get("confirm_password")
-                        if password != confirm:
-                            raise ValueError("Password differs from"
-                                             " confirmed password.")
-                    saver.set_password(password)
-                    saver.set_status(constants.ENABLED)
-                elif not flask.current_app.config["MAIL_SERVER"]:
-                    password = flask.request.form.get("password") or None
-                    if password:
-                        confirm = flask.request.form.get("confirm_password")
-                        if password != confirm:
-                            raise ValueError("Password an confirmed password"
-                                             " not the same.")
-                    saver.set_password(password)
-                else:
-                    saver.set_password()
+                password = flask.request.form.get("password")
+                if password:
+                    confirm = flask.request.form.get("confirm_password")
+                    if password != confirm:
+                        raise ValueError("Password differs from"
+                                         " confirmed password.")
+                saver.set_password(password)
+                saver.set_status(constants.ENABLED)
             user = saver.doc
         except ValueError as error:
             return utils.error(error)
         utils.get_logger().info(f"registered user {user['username']}")
-        # Directly enabled.
-        if user["status"] == constants.ENABLED:
-            if user["password"][:5] == "code:":
-                utils.get_logger().info(f"enabled user {user['username']}")
-                # Send code by email to user.
-                if flask.current_app.config["MAIL_SERVER"]:
-                    send_password_code(user, "registration")
-                    utils.flash_message("User account created; check your email.")
-                # No email server: must contact admin.
-                else:
-                    utils.flash_message("User account created; contact"
-                                        " the site admin to get the password"
-                                        " setting code.")
-            # Directly enabled and password set. No email to anyone.
-            else:
-                utils.get_logger().info(f"enabled user {user['username']}"
-                                        " and set password")
-                utils.flash_message("User account created and password set.")
-        # Was set to 'pending'; send email to admins if email server defined.
-        elif flask.current_app.config["MAIL_SERVER"]:
-            admins = get_users(constants.ADMIN, status=constants.ENABLED)
-            emails = [u["email"] for u in admins]
-            site = flask.current_app.config["SITE_NAME"]
-            message = flask_mail.Message(f"{site} user account pending",
-                                         recipients=emails)
-            url = utils.url_for(".display", username=user["username"])
-            message.body = f"To enable the user account, go to {url}"
-            utils.mail.send(message)
-            utils.get_logger().info(f"pending user {user['username']}")
-            utils.flash_message("User account created; an email will be sent"
-                                " when it has been enabled by the admin.")
-        else:
-            utils.get_logger().info(f"pending user {user['username']}")
-            utils.flash_message("User account created; admin will enable it"
-                                " at some point. Try login later.")
-        return flask.redirect(flask.url_for("home"))
-
-@blueprint.route("/reset", methods=["GET", "POST"])
-def reset():
-    "Reset the password for a user account and send email."
-    if not flask.current_app.config["MAIL_SERVER"]:
-        return utils.error("Cannot reset password; no email server defined.")
-        
-    if utils.http_GET():
-        email = flask.request.args.get("email") or ""
-        email = email.lower()
-        return flask.render_template("user/reset.html", email=email)
-
-    elif utils.http_POST():
-        try:
-            user = get_user(email=flask.request.form["email"])
-            if user is None: raise KeyError
-            if user["status"] != constants.ENABLED: raise KeyError
-        except KeyError:
-            pass
-        else:
-            with UserSaver(user) as saver:
-                saver.set_password()
-            send_password_code(user, "password reset")
-        utils.get_logger().info(f"reset user {user['username']}")
-        utils.flash_message("An email has been sent if the user account exists.")
         return flask.redirect(flask.url_for("home"))
 
 @blueprint.route("/password", methods=["GET", "POST"])
@@ -178,8 +106,7 @@ def password():
     if utils.http_GET():
         return flask.render_template(
             "user/password.html",
-            username=flask.request.args.get("username"),
-            code=flask.request.args.get("code"))
+            username=flask.request.args.get("username"))
 
     elif utils.http_POST():
         try:
@@ -191,28 +118,21 @@ def password():
                 if user is None: raise ValueError
                 if am_admin_and_not_self(user):
                     pass        # No check for either code or current password.
-                elif flask.current_app.config["MAIL_SERVER"]:
-                    code = flask.request.form.get("code") or ""
-                    if user["password"] != f"code:{code}": raise ValueError
                 else:
                     password = flask.request.form.get("current_password") or ""
                     if not check_password_hash(user["password"], password):
                         raise ValueError
             except ValueError:
-                if flask.current_app.config["MAIL_SERVER"]:
-                    raise ValueError("No such user or wrong code.")
-                else:
-                    raise ValueError("No such user or wrong password.")
+                raise ValueError("No such user or wrong password.")
             password = flask.request.form.get("password") or ""
             if len(password) < flask.current_app.config["MIN_PASSWORD_LENGTH"]:
                 raise ValueError("Too short password.")
-            if not flask.current_app.config["MAIL_SERVER"]:
-                if password != flask.request.form.get("confirm_password"):
-                    raise ValueError("Wrong password entered; confirm failed.")
+            if password != flask.request.form.get("confirm_password"):
+                raise ValueError("Wrong password entered; confirm failed.")
         except ValueError as error:
-            return utils.error(error, flask.url_for(".password",
-                                                    username=username,
-                                                    code=code))
+            return utils.error(
+                error,
+                flask.url_for(".password", username=username, code=code))
         with UserSaver(user) as saver:
             saver.set_password(password)
         utils.get_logger().info(f"password user {user['username']}")
@@ -318,9 +238,6 @@ def enable(username):
         return utils.error("You cannot enable yourself.")
     with UserSaver(user) as saver:
         saver.set_status(constants.ENABLED)
-    if user["password"][:5] == "code:" and \
-       flask.current_app.config["MAIL_SERVER"]:
-        send_password_code(user, "enabled")
     utils.get_logger().info(f"enabled user {username}")
     return flask.redirect(flask.url_for(".display", username=username))
 
@@ -347,10 +264,7 @@ class UserSaver(BaseSaver):
     def initialize(self):
         "Set the status for a new user."
         super().initialize()
-        if flask.current_app.config["USER_ENABLE_IMMEDIATELY"]:
-            self.doc["status"] = constants.ENABLED
-        else:
-            self.doc["status"] = constants.PENDING
+        self.doc["status"] = constants.ENABLED
 
     def finalize(self):
         "Check that required fields have been set."
@@ -375,11 +289,6 @@ class UserSaver(BaseSaver):
         if get_user(email=email):
             raise ValueError("Email already in use.")
         self.doc["email"] = email
-        if self.doc.get("status") == constants.PENDING:
-            for expr in flask.current_app.config["USER_ENABLE_EMAIL_WHITELIST"]:
-                if fnmatch.fnmatch(email, expr):
-                    self.set_status(constants.ENABLED)
-                    break
 
     def set_status(self, status):
         if status not in constants.USER_STATUSES:
@@ -500,17 +409,6 @@ def do_login(username, password):
     flask.session["username"] = user["username"]
     flask.session.permanent = True
     utils.get_logger().info(f"logged in {user['username']}")
-
-def send_password_code(user, action):
-    "Send an email with the one-time code to the user's email address."
-    site = flask.current_app.config["SITE_NAME"]
-    message = flask_mail.Message(f"{site} user account {action}",
-                                 recipients=[user["email"]])
-    url = utils.url_for(".password",
-                        username=user["username"],
-                        code=user["password"][len("code:"):])
-    message.body = f"To set your password, go to {url}"
-    utils.mail.send(message)
 
 def am_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"

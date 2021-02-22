@@ -2,7 +2,7 @@
 
 import re
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 class Constants:
     VERSION     = __version__
@@ -23,10 +23,9 @@ class Constants:
     USER_ROLES = (ADMIN, USER)
 
     # User statuses
-    PENDING  = "pending"
     ENABLED  = "enabled"
     DISABLED = "disabled"
-    USER_STATUSES = [PENDING, ENABLED, DISABLED]
+    USER_STATUSES = [ENABLED, DISABLED]
 
     def __setattr__(self, key, value):
         raise ValueError("Cannot set constant.")

@@ -10,7 +10,6 @@ import time
 import uuid
 
 import flask
-import flask_mail
 import jinja2.utils
 import marko
 import werkzeug.routing
@@ -71,9 +70,6 @@ def log_access(response):
                        f" {flask.request.method} {flask.request.path}"
                        f" {response.status_code}")
     return response
-
-# Global instance of mail interface.
-mail = flask_mail.Mail()
 
 # Decorators for endpoints
 def login_required(f):
