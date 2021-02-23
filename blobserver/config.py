@@ -24,6 +24,7 @@ DEFAULT_SETTINGS = dict(
     HOST_LOGO = None,           # Name of file in 'SITE_STATIC_DIRPATH'
     HOST_NAME = None,
     HOST_URL = None,
+    CONTACT_EMAIL = None,
     SECRET_KEY = None,          # Must be set in 'settings.json'
     SALT_LENGTH = 12,
     STORAGE_DIRPATH = None,     # Must be set in 'settings.json'

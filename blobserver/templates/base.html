@@ -78,13 +78,9 @@
                aria-haspopup="true" aria-expanded="false">About</a>
             <div class="dropdown-menu" aria-labelledby="navbarAbout">
               <a class="nav-link"
+                 href="{{ url_for('about.contact') }}">Contact</a>
+              <a class="nav-link"
                  href="{{ url_for('about.software') }}">Software</a>
-              {% if g.am_admin %}
-              <a class="nav-link"
-                 href="{{ url_for('about.settings') }}">Settings</a>
-              <a class="nav-link"
-                 href="{{ url_for('debug') }}">Debug</a>
-              {% endif %} {# if g.am_admin #}
 	    </div>
           </li>
 
@@ -171,7 +167,7 @@
       <div class="row">
         <div class="col-md-4">
           {% if config['HOST_URL'] %}
-          <a href="{{ config['HOST_URL'] }}">
+          <a href="{{ config['HOST_URL'] }}" target="_blank">
             {% if config['HOST_LOGO'] %}
             <img src="{{ url_for('site.static', filename=config['HOST_LOGO']) }}">
             {% endif %}
@@ -181,9 +177,8 @@
           {% if config['HOST_LOGO'] %}
           <img src="{{ url_for('site.static', filename=config['HOST_LOGO']) }}"
                title="{{ config['HOST_NAME'] or '' }}">
-          {% else %}
-          {{ config['HOST_NAME'] or '' }}
           {% endif %}
+          {{ config['HOST_NAME'] or '' }}
           {% endif %}
         </div>
         <div class="col-md-4 offset-md-4 text-right">

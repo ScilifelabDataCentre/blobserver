@@ -31,6 +31,11 @@ def get_software():
         ("clipboard.js", constants.CLIPBOARD_VERSION, "https://clipboardjs.com/")
     ]
 
+@blueprint.route("/contact")
+def contact():
+    "Show contact information."
+    return flask.render_template("about/contact.html")
+
 @blueprint.route("/settings")
 @utils.admin_required
 def settings():
