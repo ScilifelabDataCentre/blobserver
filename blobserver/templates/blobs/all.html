@@ -6,15 +6,7 @@
 
 {% block main %}
 {% include 'blobs/list.html' %}
-{% include 'blobs/commands.html' %}
 {% endblock %}
-
-{% block actions %}
-{% if g.current_user %}
-<a href="{{ url_for('blob.upload') }}" role="button"
-   class="btn btn-block btn-primary">Upload</a>
-{% endif %} {# if g.current_user #}
-{% endblock %} {# block actions #}
 
 {% block javascript %}
 {% include 'blobs/list_javascript.html' %}

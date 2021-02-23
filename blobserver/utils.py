@@ -219,7 +219,10 @@ def markdown(text):
     return jinja2.utils.Markup(get_md_parser().convert(text or ""))
 
 def user_link(user):
-    "Template filter for user output by name, with link if allowed to view."
+    """Template filter for user output by name.
+    Show as link to the user account page, if allowed.
+    If 'blobs' is true, show as link to list of user's blobs.
+    """
     from blobserver.user import am_admin_or_self
     if am_admin_or_self(user):
         url = flask.url_for('user.display', username=user['username'])

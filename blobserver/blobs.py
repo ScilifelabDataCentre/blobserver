@@ -14,9 +14,17 @@ def all():
     cursor = flask.g.db.cursor()
     rows = cursor.execute("SELECT * FROM blobs")
     blobs = [dict(zip(row.keys(), row)) for row in rows]
-    return flask.render_template("blobs/all.html",
-                                 blobs=blobs,
-                                 commands=get_commands())
+    return flask.render_template("blobs/all.html", blobs=blobs)
+
+@blueprint.route("/users")
+def users():
+    "List of number of blobs for the all users, and links to those lists."
+    cursor = flask.g.db.cursor()
+    rows = cursor.execute("SELECT username, COUNT(*) FROM blobs"
+                          " GROUP BY username")
+    users = [(blobserver.user.get_user(r[0]), r[1]) for r in rows]
+    print(users)
+    return flask.render_template("blobs/users.html", users=users)
 
 @blueprint.route("/user/<username>")
 def user(username):

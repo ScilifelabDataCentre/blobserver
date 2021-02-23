@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Users' blobs{% endblock %}
+
+{% block body_title %}Users' blobs{% endblock %}
+
+{% block main %}
+<table id="blobs" class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Blobs</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user, count in users %}
+    <tr>
+      <td>{{ user | user_link }}</td>
+      <td>
+        <a href="{{ url_for('blobs.user', username=user['username']) }}"
+           role="button" class="btn btn-primary btn-sm">
+          {{ count }} blobs</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block javascript %}
+<script>
+  $(function() {
+    $("#blobs").DataTable( {
+      pagingType: "full_numbers",
+      pageLength: 10,
+      order: [[1, "desc"]]
+    });
+  });
+</script>
+{% endblock %}

@@ -45,6 +45,9 @@
           </li>
           {% endif %}
           <li class"nav-item">
+            <a href="{{ url_for('blobs.users') }}" class="nav-link">Users' blobs</a>
+          </li>
+          <li class"nav-item">
             <a href="{{ url_for('blobs.all') }}" class="nav-link">All blobs</a>
           </li>
           {% if g.am_admin %}
