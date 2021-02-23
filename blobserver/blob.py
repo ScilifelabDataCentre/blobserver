@@ -47,8 +47,8 @@ def upload():
             return utils.error("Blob already exists; do update instead.")
         try:
             with BlobSaver() as saver:
-                saver["description"] = flask.request.form.get("description")
                 saver["filename"] = infile.filename
+                saver["description"] = flask.request.form.get("description")
                 saver["username"] = flask.g.current_user["username"]
                 saver.set_content(infile.read())
         except ValueError as error:
@@ -58,6 +58,7 @@ def upload():
 
 @blueprint.route("/<filename>", methods=["GET", "POST", "PUT", "DELETE"])
 def blob(filename):
+    "Return the blob itself, or create or update an existing blob."
     if utils.http_GET() or utils.http_HEAD():
         data = get_blob_data(filename)
         if not data:
@@ -67,8 +68,8 @@ def blob(filename):
             flask.current_app.config["STORAGE_DIRPATH"], filename)
 
     elif utils.http_PUT():
-        # Create a new blob; for programmatic use.
         data = get_blob_data(filename)
+        # Update an existing blob.
         if data:
             if not allow_update(data):
                 flask.abort(http.client.UNAUTHORIZED)
@@ -77,8 +78,10 @@ def blob(filename):
                     saver.set_content(flask.request.data)
             except ValueError:
                 flask.abort(http.client.BAD_REQUEST)
+        # Cannot create a new blob unless logged in.
         elif not flask.g.current_user:
             flask.abort(http.client.UNAUTHORIZED)
+        # Create a new blob; the filename is part of the URL.
         else:
             try:
                 with BlobSaver() as saver:
@@ -147,6 +150,7 @@ def description(filename):
 
 @blueprint.route("/<filename>/info")
 def info(filename):
+    "Display the information about the blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -159,6 +163,7 @@ def info(filename):
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
 def update(filename):
+    "Update the content and/or the description of a blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -179,6 +184,32 @@ def update(filename):
             return utils.error(error)
         return flask.redirect(
             flask.url_for("blob.info", filename=data["filename"]))
+
+@blueprint.route("/<filename>/copy", methods=["GET", "POST"])
+@utils.login_required
+def copy(filename):
+    data = get_blob_data(filename)
+    if not data:
+        return utils.error("No such blob.")
+
+    if utils.http_GET():
+        return flask.render_template("blob/copy.html", data=data)
+
+    elif utils.http_POST():
+        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
+                                data["filename"])
+        try:
+            with open(filepath, "rb") as infile:
+                content = infile.read()
+            with BlobSaver() as saver:
+                saver["filename"] = flask.request.form.get("filename")
+                saver["description"] = flask.request.form.get("description")
+                saver["username"] = flask.g.current_user["username"]
+                saver.set_content(content)
+        except ValueError as error:
+            return utils.error(error)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=saver["filename"]))
 
 @blueprint.route("/<filename>/logs")
 def logs(filename):

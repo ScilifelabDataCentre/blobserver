@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block head_title %}Update blob '{{ data["filename"] }}'{% endblock %}
+{% block head_title %}Update blob {{ data["filename"] }}{% endblock %}
 
-{% block body_title %}Update blob '{{ data["filename"] }}'{% endblock %}
+{% block body_title %}Update blob {{ data["filename"] }}{% endblock %}
 
 {% block main %}
 <form action="{{ url_for('.update', filename=data['filename']) }}"

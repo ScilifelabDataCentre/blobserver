@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Copy blob {{ data["filename"] }}{% endblock %}
+
+{% block body_title %}Copy blob {{ data["filename"] }}{% endblock %}
+
+{% block main %}
+<form action="{{ url_for('.copy', filename=data['filename']) }}"
+      method="POST">
+  {{ csrf_token() }}
+  <div class="mb-3">
+    <label for="filename" class="col-form-label">Filename for the copy</label>
+    <input type="text" id="filename" name="filename"
+	   class="form-control"
+	   aria-describedby="filenameHelp"
+           value="Copy of {{ data['filename'] }}">
+    <small id="fileHelp" class="form-text">
+      The filename of the blob copy. The filename must be new.
+    </small>
+  </div>
+
+  <div class="mb-3">
+    <label for="description" class="col-form-label">Description</label>
+    <textarea id="description" name="description"
+	      class="form-control" rows="8"
+	      aria-describedby="descriptionHelp"
+              >{{ data["description"] or '' }}</textarea>
+    <small id="descriptionHelp" class="form-text">
+      Description of the blob in Markdown format.
+    </small>
+  </div>
+
+  <div class="mb-3">
+    <button type="submit" class="btn btn-primary px-5">Copy</button>
+  </div>
+</form>
+{% endblock %} {# block main #}
+    
+{% block actions %}
+<a href="{{ url_for('blob.info', filename=data['filename']) }}" role="button"
+   class="btn btn-block btn-secondary">Cancel</a>
+{% endblock %} {# block actions #}
