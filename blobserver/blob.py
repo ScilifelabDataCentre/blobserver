@@ -9,7 +9,6 @@ import flask
 
 from blobserver import constants
 from blobserver import utils
-from blobserver.saver import BaseSaver
 
 def init(app):
     "Initialize the database; create blob table."
@@ -183,7 +182,28 @@ def update(filename):
         except ValueError as error:
             return utils.error(error)
         return flask.redirect(
-            flask.url_for("blob.info", filename=data["filename"]))
+            flask.url_for("blob.info", filename=saver["filename"]))
+
+@blueprint.route("/<filename>/rename", methods=["GET", "POST"])
+@utils.login_required
+def rename(filename):
+    data = get_blob_data(filename)
+    if not data:
+        return utils.error("No such blob.")
+    if not allow_update(data):
+        return utils.error("You may not rename the blob.")
+
+    if utils.http_GET():
+        return flask.render_template("blob/rename.html", data=data)
+
+    elif utils.http_POST():
+        try:
+            with BlobSaver(data) as saver:
+                saver.rename(flask.request.form.get("filename"))
+        except ValueError as error:
+            return utils.error(error)
+        return flask.redirect(
+            flask.url_for("blob.info", filename=saver["filename"]))
 
 @blueprint.route("/<filename>/copy", methods=["GET", "POST"])
 @utils.login_required
@@ -224,7 +244,7 @@ def logs(filename):
         logs=utils.get_logs(data["iuid"]))
 
 
-class BlobSaver(BaseSaver):
+class BlobSaver(utils.BaseSaver):
     "Save the blob."
 
     LOG_EXCLUDE_PATHS = [["content"], ["modified"]]  # Exclude from log info.
@@ -237,13 +257,33 @@ class BlobSaver(BaseSaver):
             hash.update(content)
             self[name] = hash.hexdigest()
 
+    def rename(self, filename):
+        if filename.startswith("_"):
+            raise ValueError("Filename is not allowed to start"
+                             " with an underscore character.")
+        if os.path.basename(filename) != filename:
+            raise ValueError("Filename may not contain path specification.")
+        cursor = flask.g.db.cursor()
+        rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE filename=?",
+                       (filename,)))
+        if rows[0][0]:
+            raise ValueError("A blob with the given filename already exists.")
+        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
+                                filename)
+        if os.path.exists(filepath):
+            raise ValueError("A file with the given filename already exists.")
+        os.rename(os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
+                                self.doc["filename"]),
+                  filepath)
+        self["filename"] = filename
+
     def finalize(self):
         for key in ["filename", "username"]:
             if not self.doc.get(key):
                 raise ValueError(f"Invalid blob: {key} not set.")
         if self.doc["filename"].startswith("_"):
-            raise ValueError("Filename is not allowed to start with"
-                             " an underscore character.")
+            raise ValueError("Filename is not allowed to start"
+                             " with an underscore character.")
         if flask.g.current_user["quota"]:
             if len(self.doc.get("content", [])) + \
                flask.g.current_user["blobs_size"] > \
@@ -258,8 +298,8 @@ class BlobSaver(BaseSaver):
             with open(filepath, "wb") as outfile:
                 outfile.write(self.doc["content"])
             rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE"
-                                       " filename=?",
-                                       (self.doc["filename"],)))
+                                       " iuid=?",
+                                       (self.doc["iuid"],)))
             if rows[0][0] == 0:
                 keys = ["iuid", "filename", "username", "description", "md5",
                         "sha256", "sha512", "size", "modified", "created"]
@@ -268,15 +308,18 @@ class BlobSaver(BaseSaver):
                 cursor.execute(f"INSERT INTO blobs ({fields}) VALUES ({args})",
                                [self.doc.get(k) for k in keys])
             else:
-                keys = ["description", "md5", "sha256", "sha512",
-                        "size", "modified"]
+                keys = ["filename", "description", "md5",
+                        "sha256", "sha512", "size", "modified"]
                 assigns = ",".join([f"{k}=?" for k in keys])
-                values = [self.doc.get(k) for k in keys] +[self.doc["filename"]]
-                cursor.execute(f"UPDATE blobs SET {assigns} WHERE filename=?",
+                values = [self.doc.get(k) for k in keys] +[self.doc["iuid"]]
+                cursor.execute(f"UPDATE blobs SET {assigns} WHERE iuid=?",
                                values)
-        else:  # Only the description has changed; only update is relevant.
-            cursor.execute("UPDATE blobs SET description=? WHERE filename=?",
-                           (self.doc.get("description"), self.doc["filename"]))
+        else:  # Filename or description has changed; only update is relevant.
+            cursor.execute("UPDATE blobs SET filename=?, description=?"
+                           " WHERE iuid=?",
+                           (self.doc["filename"],
+                            self.doc.get("description"),
+                            self.doc["iuid"]))
 
 def get_blob_data(filename):
     """Return the data (not the content) for the blob.
@@ -302,7 +345,7 @@ def get_most_recent_blobs():
 def delete_blob(data):
     "Delete the blob and its logs."
     with flask.g.db:
-        flask.g.db.execute("DELETE FROM logs WHERE docid=?", (data["iuid"],))
+        flask.g.db.execute("DELETE FROM logs WHERE iuid=?", (data["iuid"],))
         flask.g.db.execute("DELETE FROM blobs WHERE filename=?",
                            (data["filename"],))
         filepath = os.path.join(flask.current_app.config["STORAGE_DIRPATH"],

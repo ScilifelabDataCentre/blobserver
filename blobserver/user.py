@@ -9,7 +9,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from blobserver import constants
 from blobserver import utils
-from blobserver.saver import BaseSaver
 
 def init(app):
     "Initialize the database: create user table."
@@ -188,7 +187,7 @@ def edit(username):
         if user["blobs_count"] != 0:
             return utils.error("Cannot delete non-empty user account.")
         with flask.g.db:
-            flask.g.db.execute("DELETE FROM logs WHERE docid=?",(user["iuid"],))
+            flask.g.db.execute("DELETE FROM logs WHERE iuid=?",(user["iuid"],))
             flask.g.db.execute("DELETE FROM users "
                                " WHERE username=? COLLATE NOCASE",
                                (username,))
@@ -249,7 +248,7 @@ def disable(username):
     return flask.redirect(flask.url_for(".display", username=username))
 
 
-class UserSaver(BaseSaver):
+class UserSaver(utils.BaseSaver):
     "User document saver context."
 
     HIDDEN_VALUE_PATHS = [["password", "accesskey"]]
@@ -354,6 +353,8 @@ def get_user(username=None, email=None, accesskey=None):
         user = dict(zip(rows[0].keys(), rows[0]))
         user["blobs_count"] = user_blobs_count(user)
         user["blobs_size"] = user_blobs_size(user)
+        if user["quota"]:
+            user["usage"] = round(100.0 * float(user['blobs_size']) / user['quota'], 1)
         return user
 
 def get_users(role=None, status=None):

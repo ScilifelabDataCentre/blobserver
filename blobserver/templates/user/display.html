@@ -30,7 +30,12 @@
   </tr>
   <tr>
     <th class="text-right">Total storage</th>
-    <td>{{ user['blobs_size'] | filesizeformat }}</td>
+    <td>
+      {{ user['blobs_size'] | filesizeformat }}
+      {% if user['quota'] %}
+      <small>({{ user["usage"] }} % of quota)</small>
+      {% endif %}
+    </td>
   </tr>
   <tr>
     <th class="text-right">Storage quota</th>
