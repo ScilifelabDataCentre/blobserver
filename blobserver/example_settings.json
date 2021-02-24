@@ -1,7 +1,14 @@
 {
   "DEBUG": true,
   "LOG_DEBUG": true,
-  "SECRET_KEY": "alpw409nfk23490fam:-12",
-  "SQLITE3_FILEPATH": "example_db.sqlite3",
-  "MAIL_SERVER": null
+  "SECRET_KEY": "this-must-be-a-secret-string-of-characters",
+  "SITE_STATIC_DIRPATH": "/path/to/blobserver/site/static",
+  "STORAGE_DIRPATH": "/path/to/blobserver-storage",
+  "SITE_ICON": "your-icon.png",
+  "SITE_LOGO": "your-logo.png",
+  "SITE_NAME": "My blobserver",
+  "HOST_NAME": "My site",
+  "HOST_URL": "https://www.mysite.org/",
+  "HOST_LOGO": "my-site.png",
+  "CONTACT_EMAIL": "my.email@your-organisation.se"
 }

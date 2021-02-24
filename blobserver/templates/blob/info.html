@@ -207,9 +207,11 @@
 <a href="{{ url_for('blob.update', filename=data['filename']) }}"
    role="button" class="btn btn-block btn-primary">Update</a>
 {% endif %} {# if allow_update #}
-{% if g.current_user %}
+{% if allow_update %}
 <a href="{{ url_for('blob.rename', filename=data['filename']) }}"
    role="button" class="btn btn-block btn-primary mt-2">Rename</a>
+{% endif %} {# if allow_update #}
+{% if g.current_user %}
 <a href="{{ url_for('blob.copy', filename=data['filename']) }}"
    role="button" class="btn btn-block btn-primary mt-2">Copy</a>
 {% endif %} {# if g.current_user #}

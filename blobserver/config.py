@@ -7,21 +7,21 @@ from blobserver import constants
 from blobserver import utils
 
 ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
+SITE_DIRPATH = os.path.normpath(os.path.join(ROOT_DIRPATH, "../site"))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
     SERVER_NAME = "127.0.0.1:5009",
     SITE_NAME = "blobserver",
-    SITE_STATIC_DIRPATH = None,
-    SITE_ICON = None,           # Name of file in 'SITE_STATIC_DIRPATH'
-    SITE_LOGO = None,           # Name of file in 'SITE_STATIC_DIRPATH'
+    SITE_ICON = None,           # Name of file; in '../site' directory
+    SITE_LOGO = None,           # Name of file; in '../site' directory
     DEBUG = False,
     LOG_DEBUG = False,
     LOG_NAME = "blobserver",
     LOG_FILEPATH = None,
     LOG_ROTATING = 0,           # Number of backup rotated log files, if any.
     LOG_FORMAT = "%(levelname)-10s %(asctime)s %(message)s",
-    HOST_LOGO = None,           # Name of file in 'SITE_STATIC_DIRPATH'
+    HOST_LOGO = None,           # Name of file; in '../site' directory
     HOST_NAME = None,
     HOST_URL = None,
     CONTACT_EMAIL = None,
@@ -48,8 +48,8 @@ def init(app):
         filepaths = [os.environ["SETTINGS_FILEPATH"]]
     except KeyError:
         filepaths = []
-    for filepath in ["settings.json", "../site/settings.json"]:
-        filepaths.append(os.path.normpath(os.path.join(ROOT_DIRPATH, filepath)))
+    filepaths.append(os.path.join(ROOT_DIRPATH, "settings.json"))
+    filepaths.append(os.path.join(SITE_DIRPATH, "settings.json"))
     for filepath in filepaths:
         try:
             app.config.from_json(filepath)
@@ -68,7 +68,7 @@ def init(app):
             pass
 
     # Clean up filepaths.
-    for key in ["SITE_STATIC_DIRPATH", "LOG_FILEPATH", "STORAGE_DIRPATH"]:
+    for key in ["LOG_FILEPATH", "STORAGE_DIRPATH"]:
         path = app.config[key]
         if not path: continue
         path = os.path.expanduser(path)
@@ -84,6 +84,11 @@ def init(app):
     assert app.config["STORAGE_DIRPATH"]
     assert app.config["SQLITE3_FILENAME"]
     assert app.config["SQLITE3_FILENAME"].startswith("_")
+
+    # Record dirpaths for access in app.
+    app.config["ROOT_DIRPATH"] = ROOT_DIRPATH
+    app.config["SITE_DIRPATH"] = SITE_DIRPATH
+    app.config["SITE_STATIC_DIRPATH"] = os.path.join(SITE_DIRPATH, 'static')
 
     # Set the filepath for the Sqlite3 database.
     # Will always be in the storage directory,
