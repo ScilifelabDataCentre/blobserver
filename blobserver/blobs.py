@@ -23,7 +23,6 @@ def users():
     rows = cursor.execute("SELECT username, COUNT(*) FROM blobs"
                           " GROUP BY username")
     users = [(blobserver.user.get_user(r[0]), r[1]) for r in rows]
-    print(users)
     return flask.render_template("blobs/users.html", users=users)
 
 @blueprint.route("/user/<username>")
