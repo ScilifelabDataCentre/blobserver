@@ -11,7 +11,9 @@ SITE_DIRPATH = os.path.normpath(os.path.join(ROOT_DIRPATH, "../site"))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "127.0.0.1:5009",
+    SERVER_NAME = "127.0.0.1:5009",   # For URL generation.
+    SERVER_HOST = "127.0.0.1",        # For app.run()
+    SERVER_PORT = "5009",             # For app.run()
     SITE_NAME = "blobserver",
     SITE_ICON = None,           # Name of file; in '../site' directory
     SITE_LOGO = None,           # Name of file; in '../site' directory
@@ -60,12 +62,17 @@ def init(app):
             break
 
     # Modify the configuration from environment variables.
-    for key, convert in [("DEBUG", utils.to_bool),
-                         ("SECRET_KEY", str)]:
+    for key, default in DEFAULT_SETTINGS.items():
         try:
-            app.config[key] = convert(os.environ[key])
+            value = os.environ[key] # Convert those that are not string.
+            if isinstance(default, bool):
+                value = utils.to_bool(value)
+            elif isinstance(default, int):
+                value = int(value)
         except (KeyError, TypeError, ValueError):
             pass
+        else:
+            app.config[key] = value
 
     # Clean up filepaths.
     for key in ["LOG_FILEPATH", "STORAGE_DIRPATH"]:
