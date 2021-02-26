@@ -55,6 +55,6 @@ Uses: Python3, Flask, Bootstrap 4, jQuery, DataTables, clipboard.js
 
 10. You need to create the first admin user account in the system.
     Once this admin account exists, it can be used to register other
-    accounts via the web interface.  The first admin account can be
-    created only with the command-line script `cli.py`. Use the `-h`
-    option to get help.
+    accounts via the web interface.  The first admin account must be
+    created with the command-line script `cli.py`. Use the `-h` option
+    to get help.
