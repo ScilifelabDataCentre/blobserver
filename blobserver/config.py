@@ -85,12 +85,18 @@ def init(app):
         app.config[key] = path
 
     # Sanity check; should not execute if this fails.
-    assert app.config["SECRET_KEY"]
-    assert app.config["SALT_LENGTH"] > 6
-    assert app.config["MIN_PASSWORD_LENGTH"] > 4
-    assert app.config["STORAGE_DIRPATH"]
-    assert app.config["SQLITE3_FILENAME"]
-    assert app.config["SQLITE3_FILENAME"].startswith("_")
+    if not app.config["SECRET_KEY"]:
+        raise ValueError("SECRET_KEY must be set")
+    if app.config["SALT_LENGTH"] <= 6:
+        raise ValueError("SALT_LENGTH must be more than 6 characters")
+    if app.config["MIN_PASSWORD_LENGTH"] <= 4:
+        raise ValueError("MIN_PASSWORD_LENGTH must be more than 4 characters")
+    if not app.config["STORAGE_DIRPATH"]:
+        raise ValueError("STORAGE_DIRPATH has not been set")
+    if not app.config["SQLITE3_FILENAME"]:
+        raise ValueError("SQLITE3_FILEPATH has not been set")
+    if not app.config["SQLITE3_FILENAME"].startswith("_"):
+        raise ValueError("SQLITE3_FILEPATH must begin with underscore '_'")
 
     # Record dirpaths for access in app.
     app.config["ROOT_DIRPATH"] = ROOT_DIRPATH

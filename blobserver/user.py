@@ -254,9 +254,10 @@ class UserSaver(utils.BaseSaver):
     HIDDEN_VALUE_PATHS = [["password", "accesskey"]]
 
     def initialize(self):
-        "Set the status for a new user."
+        "Set the status and API key for a new user."
         super().initialize()
-        self.doc["status"] = constants.ENABLED
+        self.set_status(constants.ENABLED)
+        self.set_accesskey()
 
     def finalize(self):
         "Check that required fields have been set."
