@@ -48,13 +48,22 @@ Uses: Python3, Flask, Bootstrap 4, jQuery, DataTables, clipboard.js
      `/path/to/blobserver/site/static` directory. See point 4 above.
    - Set CONTACT_EMAIL to an email address for your site administrator.
 
-9. Configure the reverse proxy (Apache, Nginx, or whatever) to serve
-   the blobserver Flask app via uWSGI. It is a very bad idea to use
-   the built-in Flask web server in production. It is **strongly**
-   suggested to expose the blobserver using **https**, i.e. encrypted.
+9. The first admin user cannot be created via the web interface. One must
+   use one of the following two methods:
 
-10. You need to create the first admin user account in the system.
-    Once this admin account exists, it can be used to register other
-    accounts via the web interface.  The first admin account must be
-    created with the command-line script `cli.py`. Use the `-h` option
-    to get help.
+   1. Set the variables ADMIN_USERNAME, ADMIN_EMAIL and ADMIN_PASSWORD,
+      either in the settings file, or as environment variables. If the
+      user account specified by that username has not been created already,
+      it will be created before the first request to the app is processed.
+   2. Use the command-line script `cli.py`. The option `-A` is used to
+      create an admin user account. Use the `-h` option to get help.
+
+10. Configure the reverse proxy (Apache, Nginx, or whatever) to serve
+    the blobserver Flask app via uWSGI. It is a very bad idea to use
+    the built-in Flask web server in production. It is **strongly**
+    suggested to expose the blobserver using **https**, i.e. encrypted.
+
+11. Once the web server is running, the first admin user account
+    can be used to create new user accounts (ordinary users, or admins).
+    Alternatively, the command-line script `cli.py` can be used
+    to do this.
