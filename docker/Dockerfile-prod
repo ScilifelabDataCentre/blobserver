@@ -1,0 +1,17 @@
+FROM python:alpine
+
+ADD ./ /code
+
+WORKDIR /code/blobserver
+
+RUN pip3 install -r /code/requirements.txt gunicorn
+
+RUN mkdir /code/site
+RUN mkdir /data
+
+ENV PYTHONPATH=/code/
+ENV STORAGE_DIRPATH=/data
+
+ENV GUNICORN_CMD_ARGS "--bind=0.0.0.0:5005 --workers=2 --thread=4 --worker-class=gthread --forwarded-allow-ips='*' --access-logfile -"
+
+CMD ["gunicorn","app:app"]
