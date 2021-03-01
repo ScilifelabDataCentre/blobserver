@@ -48,7 +48,7 @@ app.after_request(utils.log_access)
 
 @app.route("/")
 def home():
-    "Home page"
+    "Home page."
     blobs = blobserver.blob.get_most_recent_blobs()
     return flask.render_template("home.html", blobs=blobs)
 

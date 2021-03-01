@@ -36,17 +36,21 @@ Uses: Python3, Flask, Bootstrap 4, jQuery, DataTables, clipboard.js
 8. Edit the settings file. These settings can be configured using
    environment variables, if this is more convenient.
    - Set SECRET_KEY to a string of characters known only to you.
-   - Set SERVER_NAME to the externally visible name of the server.
+     It is required.
    - Set STORAGE_DIRPATH to the name of the directory where the
-     blob files are to be stored. See point 7 above.
-   - Set SITE_NAME to the name chosen for this service.
-   - Set SITE_ICON and SITE_LOGO to the names of files which must be
-     located in the `/path/to/blobserver/site/static` directory.
-     See point 4 above. These filenames are not required.
-   - Set HOST_NAME and HOST_URL to fit your site. The name of the
-     logo file is defined by HOST_LOGO and it must be located in the
+     blob files are to be stored. See point 7 above. It is required.
+   - Set SERVER_NAME to the externally visible name of the server.
+     This is used to form the URLs of the service. It is required.
+   - Optionally set SITE_NAME to the name chosen for this service.
+   - Optionally set SITE_ICON and SITE_LOGO to the names of files which,
+     if they are defined, must be located in the
      `/path/to/blobserver/site/static` directory. See point 4 above.
-   - Set CONTACT_EMAIL to an email address for your site administrator.
+   - Optionally set HOST_NAME and HOST_URL to fit your site.
+     The name of the logo file is set by HOST_LOGO and, if it is
+     defined, must be located in the `/path/to/blobserver/site/static`
+     directory. See point 4 above.
+   - Set CONTACT_EMAIL to an email address that handles queries about
+     the service.
 
 9. The first admin user cannot be created via the web interface. One must
    use one of the following two methods:

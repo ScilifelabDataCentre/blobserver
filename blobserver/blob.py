@@ -295,12 +295,14 @@ class BlobSaver(utils.BaseSaver):
         if "content" in self.doc:  # The content has changed; insert or update.
             filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
                                     self.doc["filename"])
-            with open(filepath, "wb") as outfile:
-                outfile.write(self.doc["content"])
             rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE"
                                        " iuid=?",
                                        (self.doc["iuid"],)))
             if rows[0][0] == 0:
+                # Defensive paranoid check.
+                if os.path.exists(filepath):
+                    raise ValueError("Cannot overwrite existing non-blobserver"
+                                     " file; use another filename.")
                 keys = ["iuid", "filename", "username", "description", "md5",
                         "sha256", "sha512", "size", "modified", "created"]
                 fields = ",".join(keys)
@@ -314,6 +316,8 @@ class BlobSaver(utils.BaseSaver):
                 values = [self.doc.get(k) for k in keys] +[self.doc["iuid"]]
                 cursor.execute(f"UPDATE blobs SET {assigns} WHERE iuid=?",
                                values)
+            with open(filepath, "wb") as outfile:
+                outfile.write(self.doc["content"])
         else:  # Filename or description has changed; only update is relevant.
             cursor.execute("UPDATE blobs SET filename=?, description=?"
                            " WHERE iuid=?",
