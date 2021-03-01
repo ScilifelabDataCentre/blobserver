@@ -10,6 +10,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from blobserver import constants
 from blobserver import utils
 
+KEYS = ["iuid", "username", "email", "role", "status",
+        "password", "accesskey", "quota", "created", "modified"]
+
 def init(app):
     "Initialize the database: create user table."
     db = utils.get_db(app)
@@ -31,9 +34,6 @@ def init(app):
                    " users_email_index ON users (email COLLATE NOCASE)")
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
                    " users_accesskey_index ON users (accesskey)")
-
-KEYS = ["iuid", "username", "email", "role", "status",
-        "password", "accesskey", "quota", "created", "modified"]
 
 
 blueprint = flask.Blueprint("user", __name__)
@@ -332,6 +332,29 @@ class UserSaver(utils.BaseSaver):
                                "WHERE iuid=?", values)
 
 # Utility functions
+
+def create_admin_user():
+    """Check if an admin user is specified by settings.
+    If it is, and it has not been created, create it.
+    """
+    flask.g.db = utils.get_db()
+    config = flask.current_app.config
+    if not (config["ADMIN_USERNAME"] and
+            config["ADMIN_EMAIL"] and
+            config["ADMIN_PASSWORD"]):
+        utils.get_logger().info("ADMIN account not specified in settings.")
+        return
+    if get_user(username=config["ADMIN_USERNAME"]):
+        utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}'"
+                                " exists already.")
+        return
+    with UserSaver() as saver:
+        saver.set_username(config["ADMIN_USERNAME"])
+        saver.set_email(config["ADMIN_EMAIL"])
+        saver.set_password(config["ADMIN_PASSWORD"])
+        saver.set_role(constants.ADMIN)
+        saver.set_status(constants.ENABLED)
+    utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}' created.")
 
 def get_user(username=None, email=None, accesskey=None):
     """Return the user for the given username, email or accesskey.

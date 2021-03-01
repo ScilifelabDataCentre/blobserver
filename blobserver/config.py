@@ -34,7 +34,10 @@ DEFAULT_SETTINGS = dict(
     MOST_RECENT = 40,
     MIN_PASSWORD_LENGTH = 6,
     PERMANENT_SESSION_LIFETIME = 7 * 24 * 60 * 60, # seconds; 1 week
-    DEFAULT_QUOTA = 104857600
+    DEFAULT_QUOTA = 104857600,
+    ADMIN_USERNAME = None,
+    ADMIN_EMAIL = None,
+    ADMIN_PASSWORD = None
 )
 
 def init(app):

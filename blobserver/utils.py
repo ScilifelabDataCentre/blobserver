@@ -41,10 +41,12 @@ def init(app):
 
 # Global logger instance.
 _logger = None
-def get_logger():
+def get_logger(app=None):
     global _logger
     if _logger is None:
-        config = flask.current_app.config
+        if app is None:
+            app = flask.current_app
+        config = app.config
         _logger = logging.getLogger(config["LOG_NAME"])
         if config["LOG_DEBUG"]:
             _logger.setLevel(logging.DEBUG)

@@ -31,6 +31,11 @@ def setup_template_context():
                 csrf_token=utils.csrf_token,
                 get_user=blobserver.user.get_user)
 
+@app.before_first_request
+def initialize():
+    "Initialization before handling first request."
+    blobserver.user.create_admin_user()
+
 @app.before_request
 def prepare():
     "Open the database connection; get the current user."
