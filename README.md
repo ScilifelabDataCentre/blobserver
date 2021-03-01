@@ -50,7 +50,7 @@ Uses: Python3, Flask, Bootstrap 4, jQuery, DataTables, clipboard.js
      defined, must be located in the `/path/to/blobserver/site/static`
      directory. See point 4 above.
    - Set CONTACT_EMAIL to an email address that handles queries about
-     the service.
+     the service. Optional, but should really be set.
 
 9. The first admin user cannot be created via the web interface. One must
    use one of the following two methods:
