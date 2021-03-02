@@ -6,7 +6,38 @@
 
 {% block main %}
 {% include 'blobs/list.html' %}
-{% include 'blobs/commands.html' %}
+
+{% if commands %}
+{% for language in commands %}
+<div class="card my-4">
+  <div class="card-header" style="background: lightgrey;">
+    <h4 class="ml-5">{{ commands[language]['title'] }}</h4>
+    <small>{{ commands[language]['text'] | safe }}</small>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-10">
+        <h6 class="ml-5">Create a new blob by uploading a file.</h6>
+        <p class="small">
+          Note that the filename of the created blob is determined by
+          the URL used. The filename of the uploaded file does not
+          matter.
+        </p>
+      </div>
+      <div class="col-md text-right">
+        <button type="button"
+                class="btn btn-sm btn-outline-primary mx-1 clipboard"
+                data-clipboard-text="{{ commands[language]['create'] }}"
+                title="Copy the curl command to the clipboard.">
+          Copy</button>
+      </div>
+    </div>
+    <pre class="bg-light p-2 my-1 border rounded">{{ commands[language]['create'] }}</pre>
+  </div>
+</div>
+{% endfor %} {# for language in commands #}
+{% endif %} {# if commands #}
+
 {% endblock %}
 
 {% block actions %}

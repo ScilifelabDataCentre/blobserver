@@ -54,6 +54,7 @@ def search():
     return flask.render_template("blobs/search.html", term=term, blobs=blobs)
 
 def get_commands():
+    "Get commands and scripts populated with access key and URLs."
     if not flask.g.current_user: return None
     accesskey = flask.g.current_user.get("accesskey")
     if not accesskey: return None
@@ -62,9 +63,20 @@ def get_commands():
                         _external=True)
     return {
         "curl": {
+            "title": "curl command",
+            "text": """<strong>curl</strong> is a command-line utility to
+transfer data to/from web servers. It is available for most computer operating
+systems. See <a target="_blank" href="https://curl.se/">curl.se</a>.""",
             "create": f'curl {url} -H "x-accesskey: {accesskey}"' \
             ' --upload-file path-to-content-file.ext'},
-        "requests": {
+        "python": {
+            "title": "Python script using 'requests'",
+            "text": """<strong>requests</strong> is a Python library for HTTP.
+It is the <i>de facto</i> standard for Python. It must be downloaded from
+<a target="_blank" href="https://pypi.org/project/requests/">PyPi</a>
+since it is not part of the built-in Python libraries.
+See <a target="_blank" href="https://requests.readthedocs.io/en/master/">
+Requests: HTTP for Humans</a>.""",
             "create": f"""import requests
 
 url = "{url}"
@@ -73,6 +85,22 @@ with open("path-to-content-file.ext", "rb") as infile:
     data = infile.read()
 
 response = requests.put(url, headers=headers, data=data)
-print(response.status_code)    # Outputs 200
-"""}
+print(response.status_code)    # Outputs 201
+"""
+        },
+        "r": {
+            "title": "R script",
+            "text": """<strong>R</strong> is an open-source package for
+statistics and data analysis available for most computer operating systems.
+See <a target="_blank" href="https://www.r-project.org/">The R Project for
+Statistical Computing</a>.""",
+            "create": f"""install.packages(httr)
+library(httr)
+
+file_data <- upload_file("path-to-content-file.ext")
+PUT("{url}",
+    body = file_data,
+    add_headers("x-accesskey"="{accesskey}"))
+"""
+        }
     }

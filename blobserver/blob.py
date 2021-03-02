@@ -377,28 +377,40 @@ def allow_delete(data):
     return False
 
 def get_commands(data):
+    "Get commands and scripts populated with access key and URLs."
     if not flask.g.current_user: return None
     if not allow_update(data): return None
     accesskey = flask.g.current_user.get("accesskey")
     if not accesskey: return None
-    c_url = flask.url_for('blob.blob',
-                          filename=data['filename'],
-                          _external=True)
-    d_url = flask.url_for('blob.description',
-                          filename=data['filename'],
-                          _external=True)
+    content_url = flask.url_for('blob.blob',
+                                filename=data['filename'],
+                                _external=True)
+    description_url = flask.url_for('blob.description',
+                                    filename=data['filename'],
+                                    _external=True)
     return {
         "curl": {
-            "content": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+            "title": "curl commands",
+            "text": """<strong>curl</strong> is a command-line utility to
+transfer data to/from web servers. It is available for most computer operating
+systems. See <a target="_blank" href="https://curl.se/">curl.se</a>.""",
+            "content": f'curl {content_url} -H "x-accesskey: {accesskey}"' \
             ' --upload-file path-to-content-file.ext',
-            "description": f'curl {d_url} -H "x-accesskey: {accesskey}"' \
+            "description": f'curl {description_url} -H "x-accesskey: {accesskey}"' \
             ' --upload-file path-to-description-file.md',
-            "delete": f'curl {c_url} -H "x-accesskey: {accesskey}"' \
+            "delete": f'curl {content_url} -H "x-accesskey: {accesskey}"' \
             " -X DELETE"},
-        "requests": {
+        "python": {
+            "title": "Python scripts using 'requests'",
+            "text": """<strong>requests</strong> is a Python library for HTTP.
+It is the <i>de facto</i> standard for Python. It must be downloaded from
+<a target="_blank" href="https://pypi.org/project/requests/">PyPi</a>
+since it is not part of the built-in Python libraries.
+See <a target="_blank" href="https://requests.readthedocs.io/en/master/">
+Requests: HTTP for Humans</a>.""",
             "content": f"""import requests
 
-url = "{c_url}"
+url = "{content_url}"
 headers = {{"x-accesskey": "{accesskey}"}}
 with open("path-to-content-file.ext", "rb") as infile:
     data = infile.read()
@@ -408,7 +420,7 @@ print(response.status_code)    # Outputs 200
 """,
                 "description": f"""import requests
 
-url = "{d_url}"
+url = "{description_url}"
 headers = {{"x-accesskey": "{accesskey}"}}
 with open("path-to-description-file.md", "rb") as infile:
     data = infile.read()
@@ -418,10 +430,39 @@ print(response.status_code)    # Outputs 200
 """,
                 "delete": f"""import requests
 
-url = "{c_url}"
+url = "{content_url}"
 headers = {{"x-accesskey": "{accesskey}"}}
 response = requests.delete(url, headers=headers)
-print(response.status_code)    # Outputs 200
+print(response.status_code)    # Outputs 204
+"""
+        },
+        "r": {
+            "title": "R scripts",
+            "text": """<strong>R</strong> is an open-source package for
+statistics and data analysis available for most computer operating systems.
+See <a target="_blank" href="https://www.r-project.org/">The R Project for
+Statistical Computing</a>.""",
+            "content": f"""install.packages(httr)
+library(httr)
+
+file_data <- upload_file("path-to-content-file.ext")
+PUT("{content_url}",
+    body = file_data,
+    add_headers("x-accesskey"="{accesskey}"))
+""",
+            "description": f"""install.packages(httr)
+library(httr)
+
+file_data <- upload_file("path-to-content-file.ext")
+PUT("{description_url}",
+    body = file_data,
+    add_headers("x-accesskey"="{accesskey}"))
+""",
+            "delete": f"""install.packages(httr)
+library(httr)
+
+DELETE("{content_url}",
+       add_headers("x-accesskey"="{accesskey}"))
 """
         }
     }
