@@ -4,6 +4,11 @@
 
 {% block body_title %}User {{ user['username'] }} blobs{% endblock %}
 
+{% block meta %}
+<a href="{{ url_for('blobs.user_json', username=user['username']) }}"
+   class="badge badge-pill badge-dark">JSON</a>
+{% endblock %}
+
 {% block main %}
 {% include 'blobs/list.html' %}
 

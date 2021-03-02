@@ -167,6 +167,24 @@ def info(filename):
         return flask.redirect(
             flask.url_for("blobs.user", username=data["username"]))
 
+@blueprint.route("/<filename>/info.json")
+def info_json(filename):
+    "Return JSON of the information about the blob, including the log."
+    data = get_blob_data(filename)
+    if not data:
+        flask.abort(http.client.NOT_FOUND)
+    result = {"$id": flask.request.url,
+              "href": flask.url_for("blob.blob", filename=filename, _external=True)}
+    result.update(data)
+    logs = utils.get_logs(data["iuid"])
+    if not flask.g.current_user:
+        # Remove half-insensitive data from logs: IP numbers and user agents.
+        for log in logs:
+            log.pop("remote_addr", None)
+            log.pop("user_agent", None)
+    result["logs"] = logs
+    return flask.jsonify(result)
+
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
 def update(filename):

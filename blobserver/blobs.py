@@ -16,6 +16,14 @@ def all():
     blobs = [dict(zip(row.keys(), row)) for row in rows]
     return flask.render_template("blobs/all.html", blobs=blobs)
 
+@blueprint.route("/all.json")
+def all_json():
+    "JSON for list of all blobs."
+    cursor = flask.g.db.cursor()
+    rows = cursor.execute("SELECT * FROM blobs")
+    blobs = [dict(zip(row.keys(), row)) for row in rows]
+    return flask.jsonify(get_blobs_json(blobs))
+
 @blueprint.route("/users")
 def users():
     "List of number of blobs for the all users, and links to those lists."
@@ -38,6 +46,17 @@ def user(username):
                                  user=user,
                                  blobs=blobs,
                                  commands=get_commands())
+
+@blueprint.route("/user/<username>.json")
+def user_json(username):
+    "JSON for list of all blobs for the given user."
+    user = blobserver.user.get_user(username)
+    if user is None:
+        flask.abort(http.client.NOT_FOUND)
+    cursor = flask.g.db.cursor()
+    rows = cursor.execute("SELECT * FROM blobs WHERE username=?", (username,))
+    blobs = [dict(zip(row.keys(), row)) for row in rows]
+    return flask.jsonify(get_blobs_json(blobs))
 
 @blueprint.route("/search")
 def search():
@@ -104,3 +123,17 @@ PUT("{url}",
 """
         }
     }
+
+def get_blobs_json(blobs):
+    "Return JSON data for the list of blobs."
+    return {"$id": flask.request.url,
+            "blobs": [{"href": flask.url_for("blob.blob",
+                                             filename=b["filename"],
+                                             _external=True),
+                       "info": flask.url_for("blob.info_json",
+                                             filename=b["filename"],
+                                             _external=True),
+                       "size": b["size"],
+                       "modified": b["modified"],
+                       "username": b["username"]}
+                      for b in blobs]}

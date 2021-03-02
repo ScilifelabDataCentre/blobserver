@@ -4,6 +4,11 @@
 
 {% block body_title %}All blobs{% endblock %}
 
+{% block meta %}
+<a href="{{ url_for('blobs.all_json') }}"
+   class="badge badge-pill badge-dark">JSON</a>
+{% endblock %}
+
 {% block main %}
 {% include 'blobs/list.html' %}
 {% endblock %}
