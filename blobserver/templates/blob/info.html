@@ -217,7 +217,7 @@
 {% endif %} {# if g.current_user #}
 {% if allow_delete %}
 <div class="mt-4">
-  <form action="{{ url_for('blob.blob', filename=data['filename']) }}"
+  <form action="{{ url_for('blob.info', filename=data['filename']) }}"
         method="POST">
     {{ csrf_token() }}
     <input type="hidden" name="_http_method" value="DELETE">

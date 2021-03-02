@@ -1,9 +1,5 @@
 "User display and login/logout HTMl endpoints."
 
-import fnmatch
-import http.client
-import json
-
 import flask
 from werkzeug.security import check_password_hash, generate_password_hash
 

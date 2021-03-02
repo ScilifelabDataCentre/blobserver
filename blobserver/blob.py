@@ -1,4 +1,4 @@
-"Blob serve, metadata display, upload and update."
+"Blob serve, information (metadata) display, upload and update."
 
 import hashlib
 import http.client
@@ -34,7 +34,7 @@ blueprint = flask.Blueprint("blob", __name__)
 @blueprint.route("/", methods=["GET", "POST"])
 @utils.login_required
 def upload():
-    "Upload a new blob."
+    "Upload a new blob via the web interface."
     if utils.http_GET():
         return flask.render_template("blob/upload.html")
 
@@ -55,9 +55,12 @@ def upload():
         return flask.redirect(
             flask.url_for("blob.info", filename=saver["filename"]))
 
-@blueprint.route("/<filename>", methods=["GET", "POST", "PUT", "DELETE"])
+@blueprint.route("/<filename>", methods=["GET", "PUT", "DELETE"])
 def blob(filename):
-    "Return the blob itself, or create or update an existing blob."
+    """Return the blob itself.
+    Programmatically create a new blob (PUT), update an existing blob (PUT),
+    or delete an existing blob (DELETE).
+    """
     if utils.http_GET() or utils.http_HEAD():
         data = get_blob_data(filename)
         if not data:
@@ -77,6 +80,7 @@ def blob(filename):
                     saver.set_content(flask.request.data)
             except ValueError:
                 flask.abort(http.client.BAD_REQUEST)
+            return ("", http.client.OK)
         # Cannot create a new blob unless logged in.
         elif not flask.g.current_user:
             flask.abort(http.client.UNAUTHORIZED)
@@ -89,8 +93,7 @@ def blob(filename):
                     saver["username"] = flask.g.current_user["username"]
             except ValueError:
                 flask.abort(http.client.BAD_REQUEST)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+            return ("", http.client.CREATED)
 
     elif utils.http_DELETE():
         data = get_blob_data(filename)
@@ -101,11 +104,9 @@ def blob(filename):
             # Just send error code; appropriate for programmatic use.
             flask.abort(http.client.FORBIDDEN)
         delete_blob(data)
-        utils.flash_message(f"Deleted blob {data['filename']}")
-        return flask.redirect(
-            flask.url_for("blobs.user", username=data["username"]))
+        return ("", http.client.NO_CONTENT)
 
-    return flask.abort(http.client.METHOD_NOT_ALLOWED)
+    flask.abort(http.client.METHOD_NOT_ALLOWED)
 
 @blueprint.route("/<filename>/description", methods=["GET", "PUT", "DELETE"])
 def description(filename):
@@ -131,8 +132,7 @@ def description(filename):
                     saver["description"] = None
         except ValueError:
             flask.abort(http.client.BAD_REQUEST)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return ("", http.client.OK)
 
     elif utils.http_DELETE():
         if not allow_delete(data):
@@ -142,22 +142,30 @@ def description(filename):
                 saver["description"] = None
         except ValueError:
             flask.abort(http.client.BAD_REQUEST)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return ("", http.client.OK)
 
-    return flask.abort(http.client.METHOD_NOT_ALLOWED)
+    flask.abort(http.client.METHOD_NOT_ALLOWED)
 
-@blueprint.route("/<filename>/info")
+@blueprint.route("/<filename>/info", methods=["GET", "POST", "DELETE"])
 def info(filename):
-    "Display the information about the blob."
+    "Display the information about the blob. Delete from the web interface."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
-    return flask.render_template("blob/info.html", 
-                                 data=data,
-                                 allow_update=allow_update(data),
-                                 allow_delete=allow_delete(data),
-                                 commands=get_commands(data))
+
+    if utils.http_GET():
+        return flask.render_template("blob/info.html", 
+                                     data=data,
+                                     allow_update=allow_update(data),
+                                     allow_delete=allow_delete(data),
+                                     commands=get_commands(data))
+    elif utils.http_DELETE():
+        if not allow_delete(data):
+            return utils.error("You are not allowed to delete the blob.")
+        delete_blob(data)
+        utils.flash_message(f"Deleted blob {data['filename']}")
+        return flask.redirect(
+            flask.url_for("blobs.user", username=data["username"]))
 
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
