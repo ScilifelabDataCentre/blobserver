@@ -459,25 +459,24 @@ print(response.status_code)    # Outputs 204
             "text": """<strong>R</strong> is an open-source package for
 statistics and data analysis available for most computer operating systems.
 See <a target="_blank" href="https://www.r-project.org/">The R Project for
-Statistical Computing</a>.""",
-            "content": f"""install.packages(httr)
-library(httr)
+Statistical Computing</a>. You need to have the 'httr' package installed
+for the code below to work: <code>install.packages("httr")</code>.
+""",
+            "content": f"""library(httr)
 
 file_data <- upload_file("path-to-content-file.ext")
 PUT("{content_url}",
     body = file_data,
     add_headers("x-accesskey"="{accesskey}"))
 """,
-            "description": f"""install.packages(httr)
-library(httr)
+            "description": f"""library(httr)
 
-file_data <- upload_file("path-to-content-file.ext")
+file_data <- upload_file("path-to-content-file.md")
 PUT("{description_url}",
     body = file_data,
     add_headers("x-accesskey"="{accesskey}"))
 """,
-            "delete": f"""install.packages(httr)
-library(httr)
+            "delete": f"""library(httr)
 
 DELETE("{content_url}",
        add_headers("x-accesskey"="{accesskey}"))
