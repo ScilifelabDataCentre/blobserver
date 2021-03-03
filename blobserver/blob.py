@@ -420,10 +420,10 @@ systems. See <a target="_blank" href="https://curl.se/">curl.se</a>.""",
             " -X DELETE"},
         "python": {
             "title": "Python scripts using 'requests'",
-            "text": """<strong>requests</strong> is a Python library for HTTP.
+            "text": """<strong>requests</strong> is a Python package for HTTP.
 It is the <i>de facto</i> standard for Python. It must be downloaded from
 <a target="_blank" href="https://pypi.org/project/requests/">PyPi</a>
-since it is not part of the built-in Python libraries.
+since it is not part of the built-in Python packages.
 See <a target="_blank" href="https://requests.readthedocs.io/en/master/">
 Requests: HTTP for Humans</a>.""",
             "content": f"""import requests
@@ -460,23 +460,24 @@ print(response.status_code)    # Outputs 204
 statistics and data analysis available for most computer operating systems.
 See <a target="_blank" href="https://www.r-project.org/">The R Project for
 Statistical Computing</a>. You need to have the 'httr' package installed
-for the code below to work: <code>install.packages("httr")</code>.
+for the code below to work:
+<code>install.packages("httr", dependencies=TRUE)</code>.
 """,
-            "content": f"""library(httr)
+            "content": f"""library("httr")
 
 file_data <- upload_file("path-to-content-file.ext")
 PUT("{content_url}",
     body = file_data,
     add_headers("x-accesskey"="{accesskey}"))
 """,
-            "description": f"""library(httr)
+            "description": f"""library("httr")
 
-file_data <- upload_file("path-to-content-file.md")
+file_data <- upload_file("path-to-description-file.md")
 PUT("{description_url}",
     body = file_data,
     add_headers("x-accesskey"="{accesskey}"))
 """,
-            "delete": f"""library(httr)
+            "delete": f"""library("httr")
 
 DELETE("{content_url}",
        add_headers("x-accesskey"="{accesskey}"))

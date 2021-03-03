@@ -94,12 +94,13 @@ def register():
         return flask.redirect(flask.url_for("home"))
 
 @blueprint.route("/password", methods=["GET", "POST"])
+@utils.login_required
 def password():
     "Set the password for a user account, and login user."
     if utils.http_GET():
-        return flask.render_template(
-            "user/password.html",
-            username=flask.request.args.get("username"))
+        username = flask.request.args.get("username") or \
+                   flask.g.current_user["username"]
+        return flask.render_template("user/password.html", username=username)
 
     elif utils.http_POST():
         try:
@@ -126,7 +127,7 @@ def password():
         utils.get_logger().info(f"password user {user['username']}")
         if not flask.g.current_user:
             do_login(username, password)
-        return flask.redirect(flask.url_for("home"))
+        return flask.redirect(flask.url_for("user.display", username=username))
 
 @blueprint.route("/display/<identifier:username>")
 @utils.login_required
@@ -247,7 +248,7 @@ def disable(username):
 class UserSaver(utils.BaseSaver):
     "User document saver context."
 
-    HIDDEN_VALUE_PATHS = [["password", "accesskey"]]
+    LOG_HIDE_VALUE_PATHS = [["password"], ["accesskey"]]
 
     def initialize(self):
         "Set the status and API key for a new user."
