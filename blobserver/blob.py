@@ -1,6 +1,7 @@
 "Blob serve, information (metadata) display, upload and update."
 
 import hashlib
+import html
 import http.client
 import os
 import os.path
@@ -84,7 +85,7 @@ def blob(filename):
         # Cannot create a new blob unless logged in.
         elif not flask.g.current_user:
             flask.abort(http.client.UNAUTHORIZED)
-        # Create a new blob; the filename is part of the URL.
+        # Create a new blob; the filename is given in the URL.
         else:
             try:
                 with BlobSaver() as saver:
@@ -276,6 +277,7 @@ class BlobSaver(utils.BaseSaver):
     LOG_EXCLUDE_PATHS = [["content"], ["modified"]]  # Exclude from log info.
 
     def set_content(self, content):
+        "Set the content of the blob, and the parameters determined by it."
         self["content"] = content
         self["size"] = len(content)
         for name in ["md5", "sha256", "sha512"]:
@@ -284,9 +286,8 @@ class BlobSaver(utils.BaseSaver):
             self[name] = hash.hexdigest()
 
     def rename(self, filename):
-        if filename.startswith("_"):
-            raise ValueError("Filename is not allowed to start"
-                             " with an underscore character.")
+        "Rename the blob."
+        check_filename(filename)
         if os.path.basename(filename) != filename:
             raise ValueError("Filename may not contain path specification.")
         cursor = flask.g.db.cursor()
@@ -304,12 +305,11 @@ class BlobSaver(utils.BaseSaver):
         self["filename"] = filename
 
     def finalize(self):
+        "Finalize modifications of the blob."
         for key in ["filename", "username"]:
             if not self.doc.get(key):
                 raise ValueError(f"Invalid blob: {key} not set.")
-        if self.doc["filename"].startswith("_"):
-            raise ValueError("Filename is not allowed to start"
-                             " with an underscore character.")
+        check_filename(self.doc["filename"])
         if flask.g.current_user["quota"]:
             if len(self.doc.get("content", [])) + \
                flask.g.current_user["blobs_size"] > \
@@ -317,6 +317,7 @@ class BlobSaver(utils.BaseSaver):
                 raise ValueError("User's quota cannot accommodate the blob.")
 
     def upsert(self):
+        "Update or insert the blob information into the database."
         cursor = flask.g.db.cursor()
         if "content" in self.doc:  # The content has changed; insert or update.
             filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
@@ -381,6 +382,16 @@ def delete_blob(data):
         filepath = os.path.join(flask.current_app.config["STORAGE_DIRPATH"],
                                 data["filename"])
         os.remove(filepath)
+
+def check_filename(filename):
+    "Raise ValueError if the given filename is invalid."
+    if "/" in filename:
+        raise ValueError("Filename may not contain slash '/' characters.")
+    if filename.startswith("_"):
+        raise ValueError("Filename is not allowed to start"
+                         " with an underscore character.")
+    if filename != html.escape(filename):
+        raise ValueError("Filename may not contain HTML-sensitive characters.")
 
 def allow_update(data):
     if not flask.g.current_user: return False

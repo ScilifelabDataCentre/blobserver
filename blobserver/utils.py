@@ -3,6 +3,7 @@
 import copy
 import datetime
 import functools
+import html
 import http.client
 import json
 import logging
@@ -221,7 +222,8 @@ def get_md_parser():
 
 def markdown(text):
     "Template filter to process the text using Marko markdown."
-    return jinja2.utils.Markup(get_md_parser().convert(text or ""))
+    text = html.escape(text or "", quote=False)
+    return jinja2.utils.Markup(get_md_parser().convert(text))
 
 def user_link(user):
     """Template filter for user output by name.
