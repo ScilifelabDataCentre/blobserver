@@ -10,6 +10,7 @@ import flask
 
 from blobserver import constants
 from blobserver import utils
+import blobserver.user
 
 def init(app):
     "Initialize the database; create blob table."
@@ -203,6 +204,13 @@ def update(filename):
         try:
             with BlobSaver(data) as saver:
                 saver["description"] = flask.request.form.get("description")
+                if flask.g.am_admin:
+                    username = flask.request.form.get("username")
+                    if username:
+                        if not blobserver.user.get_user(username):
+                            raise ValueError(f"No such user '{username}'.")
+                        # Do not check quota: Admin can do whatever she likes...
+                        saver["username"] = username
                 infile = flask.request.files.get("file")
                 if infile:
                     saver.set_content(infile.read())
@@ -337,7 +345,8 @@ class BlobSaver(utils.BaseSaver):
                 cursor.execute(f"INSERT INTO blobs ({fields}) VALUES ({args})",
                                [self.doc.get(k) for k in keys])
             else:
-                keys = ["filename", "description", "md5",
+                # Username included, to allow admin to change user of blob.
+                keys = ["filename", "username", "description", "md5",
                         "sha256", "sha512", "size", "modified"]
                 assigns = ",".join([f"{k}=?" for k in keys])
                 values = [self.doc.get(k) for k in keys] +[self.doc["iuid"]]
@@ -346,10 +355,11 @@ class BlobSaver(utils.BaseSaver):
             with open(filepath, "wb") as outfile:
                 outfile.write(self.doc["content"])
         else:  # Filename or description has changed; only update is relevant.
-            cursor.execute("UPDATE blobs SET filename=?, description=?"
-                           " WHERE iuid=?",
+            cursor.execute("UPDATE blobs SET filename=?, description=?,"
+                           " username=? WHERE iuid=?",
                            (self.doc["filename"],
                             self.doc.get("description"),
+                            self.doc.get("username"),
                             self.doc["iuid"]))
 
 def get_blob_data(filename):
