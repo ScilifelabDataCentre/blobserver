@@ -1,6 +1,7 @@
 "Web app to upload and serve blobs (files)."
 
 import flask
+from flask_cors import CORS
 import jinja2.utils
 
 import blobserver.about
@@ -13,6 +14,8 @@ from blobserver import constants
 from blobserver import utils
 
 app = flask.Flask(__name__)
+
+CORS(app, supports_credentials=True)
 
 # Add URL map converters.
 app.url_map.converters["identifier"] = utils.IdentifierConverter
