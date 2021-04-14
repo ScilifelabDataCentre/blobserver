@@ -8,6 +8,7 @@
 <form action="{{ url_for('.login') }}"
       method="POST">
   {{ csrf_token() }}
+
   <div class="form-group row">
     <label for="username" class="col-md-2 col-form-label text-right">
       User name</label>
@@ -15,6 +16,7 @@
       <input type="text" id="username" name="username" class="form-control">
     </div>
   </div>
+
   <div class="form-group row">
     <label for="email" class="col-md-2 col-form-label text-right">
       Password</label>
@@ -22,9 +24,11 @@
       <input type="password" id="password" name="password" class="form-control">
     </div>
   </div>
+
   {% if next %}
   <input type="hidden" name="next" value="{{ next }}">
   {% endif %}
+
   <div class="form-group row">
     <div class="col-md-3 offset-md-2">
       <button type="submit" class="btn btn-block btn-primary">Login</button>
@@ -40,6 +44,7 @@
       Register a new user account</a>
   </div>
 </div>
+
 <div class="row pt-4">
   <div class="col-md-4 offset-md-2">
     <a href="{{ url_for('.reset') }}"
@@ -47,6 +52,7 @@
       Reset password for an existing user account</a>
   </div>
 </div>
+
 {% else %}
 <div class="row pt-4">
   <div class="col-md-10 offset-md-2">
