@@ -9,6 +9,7 @@
       enctype="multipart/form-data"
       method="POST">
   {{ csrf_token() }}
+
   <div class="mb-3">
     <label for="description" class="col-form-label">Description</label>
     <textarea id="description" name="description"
@@ -33,6 +34,18 @@
       that the filename of the blob will not be changed.
     </small>
   </div>
+
+  {% if g.am_admin %}
+  <div class="mb-3">
+    <label for="username" class="col-form-label">Change user</label>
+    <input type="text" id="username" name="username"
+	   class="form-control"
+	   aria-describedby="usernameHelp">
+    <small id="usernameHelp" class="form-text">
+      The username of the new owner of the blob. Leave blank if no change.
+    </small>
+  </div>
+  {% endif %} {# if g.am_admin #}
 
   <div class="mb-3">
     <button type="submit" class="btn btn-primary px-5">Update</button>

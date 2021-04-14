@@ -8,12 +8,13 @@
 <form action="{{ url_for('.rename', filename=data['filename']) }}"
       method="POST">
   {{ csrf_token() }}
+
   <div class="mb-3">
     <label for="filename" class="col-form-label">New filename</label>
     <input type="text" id="filename" name="filename"
 	   class="form-control"
 	   aria-describedby="filenameHelp">
-    <small id="fileHelp" class="form-text">
+    <small id="filenameHelp" class="form-text">
       The new filename of the blob. It must be unique.
     </small>
   </div>
