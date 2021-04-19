@@ -13,11 +13,11 @@
   <tbody>
     {% for data in blobs %}
     <tr>
-      <td>
+      <td class="blobserver-bloblink">
         <a href="{{ url_for('blob.blob', filename=data['filename']) }}">
           {{ data['filename'] }}</a>
       </td>
-      <td>
+      <td class="blobserver-blobinfo">
         <a href="{{ url_for('blob.info', filename=data['filename']) }}">
           Information</a>
       </td>

@@ -9,17 +9,16 @@
   <thead>
     <tr>
       <th>User</th>
-      <th>Blobs</th>
+      <th># of blobs</th>
     </tr>
   </thead>
   <tbody>
     {% for user, count in users %}
     <tr>
-      <td>{{ user | user_link }}</td>
+      <td class="blobserver-username">{{ user | user_link }}</td>
       <td>
         <a href="{{ url_for('blobs.user', username=user['username']) }}"
-           role="button" class="btn btn-primary btn-sm">
-          {{ count }} blobs</a>
+           role="button" class="btn btn-primary btn-sm">{{ count }}</a>
       </td>
     </tr>
     {% endfor %}
