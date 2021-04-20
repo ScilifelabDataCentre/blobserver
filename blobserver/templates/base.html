@@ -86,26 +86,24 @@
 
           <li class="mx-1">
             {% if g.current_user %}
-            <a href="{{ url_for('user.display', username=g.current_user['username']) }}"
+            <a id="blobserver-userlink"
+               href="{{ url_for('user.display', username=g.current_user['username']) }}"
 	       role="button" class="btn btn-outline-secondary my-2 my-sm-0">
               User {{ g.current_user['username'] }}</a>
             {% else %}
-            <form id="login-page"
-                  action="{{ url_for('user.login') }}"
-                  class="form-inline my-2 my-sm-0"
-                  method="GET">
+            <form id="login-formlink"
+                  action="{{ url_for('user.login') }}" method="GET"
+                  class="form-inline my-2 my-sm-0">
               <input type="hidden" name="next" value="{{ request.url }}">
               <button type="submit" class="btn btn-secondary">Login</button>
             </form>
             {% endif %}
           </li>
-          <form action="{{ url_for('blobs.search') }}"
-                method="GET"
+          <form action="{{ url_for('blobs.search') }}" method="GET"
                 class="form-inline my-2 my-lg-0">
             <input type="search" name="term"
                    class="form-control mx-sm-2"
-                   placeholder="Search"
-                   aria-label="Search">
+                   placeholder="Search" aria-label="Search">
           </form>
         </ul>
       </div>
