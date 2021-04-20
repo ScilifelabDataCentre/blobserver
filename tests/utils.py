@@ -19,10 +19,15 @@ class BrowserTestCase(unittest.TestCase):
 
 
 def get_settings():
+    """Get the settings from
+    1) default
+    2) settings file
+    3) environment variables
+    """
     result = {
         "BROWSER": "Chrome",
         "BASE_URL": "http://127.0.0.1:5009/",
-        "USER": None,
+        "USERNAME": None,
         "PASSWORD": None
     }
 
