@@ -1,18 +1,18 @@
-"Various utilities for the tests."
+"Some utilities for the tests."
 
 import json
 import os
 import unittest
 
-import selenium
+import selenium.webdriver
 
 
 class BrowserTestCase(unittest.TestCase):
     "Browser driver setup."
 
     def setUp(self):
-        settings = get_settings()
-        self.driver = get_browser_driver(settings["BROWSER"])
+        self.settings = get_settings()
+        self.driver = get_browser_driver(self.settings["BROWSER"])
 
     def tearDown(self):
         self.driver.close()
