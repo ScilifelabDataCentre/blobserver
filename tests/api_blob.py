@@ -19,6 +19,12 @@ class Blob(unittest.TestCase):
         "Create a blob by HTTP PUT."
         headers = {"x-accesskey": self.settings["ACCESSKEY"]}
 
+        # How many blobs for the user to start with?
+        user_url = self.settings["BASE_URL"] + f"blobs/user/{self.settings['USERNAME']}.json"
+        response = requests.get(user_url, headers=headers)
+        self.assertEqual(response.status_code, 200)
+        count = len(response.json()["blobs"])
+
         # Get the file data; this Python file.
         filename = os.path.basename(__file__)
         filepath = os.path.join(os.getcwd(), filename)
@@ -35,9 +41,19 @@ class Blob(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data, response.content)
 
+        # Check the number of blobs for the user.
+        response = requests.get(user_url, headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["blobs"]), count+1)
+
         # Delete the blob.
         response = requests.delete(url, headers=headers)
         self.assertEqual(response.status_code, 204)
+
+        # Check the number of blobs for the user.
+        response = requests.get(user_url, headers=headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["blobs"]), count)
 
     def test_2_update_blob(self):
         "Create and update a blob by HTTP PUT."
