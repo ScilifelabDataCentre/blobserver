@@ -116,7 +116,10 @@ def sitemap():
         pages.append(
             dict(url=flask.url_for("user.display", username=row["username"], _external=True),
                  changefreq="weekly"))
-    return flask.render_template("sitemap.xml", pages=pages)
+    xml = flask.render_template("sitemap.xml", pages=pages)
+    response = flask.current_app.make_response(xml)
+    response.mimetype = "text/xml"
+    return response
 
 
 # Set up the URL map.
