@@ -72,6 +72,53 @@ def debug():
     result.append("</table>")
     return jinja2.utils.Markup("\n".join(result))
 
+@app.route("/status")
+def status():
+    "Return JSON for the current status and some counts for the database."
+    cursor = flask.g.db.cursor()
+    rows = list(cursor.execute("SELECT COUNT(*) FROM blobs"))
+    n_blobs = rows[0][0]
+    rows = list(cursor.execute("SELECT COUNT(*) FROM users"))
+    n_users = rows[0][0]
+    rows = list(cursor.execute("SELECT COUNT(*) FROM logs"))
+    n_logs = rows[0][0]
+    return dict(status="ok",
+                n_blobs=n_blobs,
+                n_users=n_users,
+                n_logs=n_logs)
+
+@app.route("/sitemap")
+def sitemap():
+    "Return an XML sitemap."
+    cursor = flask.g.db.cursor()
+    pages = [dict(url=flask.url_for("home", _external=True),
+                  changefreq="daily",
+                  priority=1.0),
+             dict(url=flask.url_for("blobs.all", _external=True),
+                  changefreq="daily",
+                  priority=1.0),
+             dict(url=flask.url_for("about.contact", _external=True),
+                  changefreq="yearly"),
+             dict(url=flask.url_for("about.software", _external=True),
+                  changefreq="yearly")]
+    rows = cursor.execute("SELECT filename FROM blobs")
+    for row in rows:
+        pages.append(
+            dict(url=flask.url_for("blob.blob", filename=row["filename"], _external=True),
+                 changefreq="weekly"))
+        pages.append(
+            dict(url=flask.url_for("blob.info", filename=row["filename"], _external=True),
+                 changefreq="weekly"))
+    pages.append(dict(url=flask.url_for("user.all", _external=True),
+                      changefreq="monthly"))
+    rows = cursor.execute("SELECT username FROM users")
+    for row in rows:
+        pages.append(
+            dict(url=flask.url_for("user.display", username=row["username"], _external=True),
+                 changefreq="weekly"))
+    return flask.render_template("sitemap.xml", pages=pages)
+
+
 # Set up the URL map.
 app.register_blueprint(blobserver.about.blueprint, url_prefix="/about")
 app.register_blueprint(blobserver.user.blueprint, url_prefix="/user")
