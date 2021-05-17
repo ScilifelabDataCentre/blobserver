@@ -18,6 +18,14 @@ class BrowserTestCase(unittest.TestCase):
         self.driver.close()
 
 
+class ApiMixin:
+    "Provides method the check the validity of a result against its schema."
+
+    def setUp(self):
+        self.settings = get_settings()
+        self.headers = {"x-accesskey": self.settings["ACCESSKEY"]}
+
+
 def get_settings():
     """Get the settings from
     1) default
