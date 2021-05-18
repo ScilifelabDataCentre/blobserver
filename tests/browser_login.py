@@ -29,7 +29,7 @@ class LoginUser(utils.BrowserTestCase):
         elem = self.driver.find_element_by_name("password")
         elem.clear()
         elem.send_keys(self.settings["PASSWORD"])
-        elem = self.driver.find_element_by_id("login-form")
+        elem = self.driver.find_element_by_id("login-form-submit")
         elem.send_keys(Keys.RETURN)
 
         # Home page again.
@@ -58,7 +58,7 @@ class LoginUser(utils.BrowserTestCase):
         elem = self.driver.find_element_by_name("password")
         elem.clear()
         elem.send_keys(self.settings["PASSWORD"])
-        elem = self.driver.find_element_by_id("login-form")
+        elem = self.driver.find_element_by_id("login-form-submit")
         elem.send_keys(Keys.RETURN)
 
         # Home page. Find link to user account page.
@@ -67,7 +67,6 @@ class LoginUser(utils.BrowserTestCase):
 
         # User account page. Find access key.
         elem = self.driver.find_element_by_xpath("//th[text()='Access key']/following-sibling::td")
-
         self.assertTrue(elem.text == "-" or len(elem.text) == 32)
 
     def test_3_logout(self):
@@ -87,7 +86,7 @@ class LoginUser(utils.BrowserTestCase):
         elem = self.driver.find_element_by_name("password")
         elem.clear()
         elem.send_keys(self.settings["PASSWORD"])
-        elem = self.driver.find_element_by_id("login-form")
+        elem = self.driver.find_element_by_id("login-form-submit")
         elem.send_keys(Keys.RETURN)
 
         # Home page again. Find link to user account page.

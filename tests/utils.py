@@ -1,7 +1,6 @@
 "Some utilities for the tests."
 
 import json
-import os
 import unittest
 
 import selenium.webdriver
@@ -30,7 +29,6 @@ def get_settings():
     """Get the settings from
     1) default
     2) settings file
-    3) environment variables
     """
     result = {
         "BROWSER": "Chrome",
@@ -44,11 +42,6 @@ def get_settings():
             result.update(json.load(infile))
     except IOError:
         pass
-    for key in result:
-        try:
-            result[key] = os.environ[key]
-        except KeyError:
-            pass
     for key in result:
         if result.get(key) is None:
             raise KeyError(f"Missing {key} value in settings.")
