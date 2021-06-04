@@ -11,13 +11,10 @@ SITE_DIRPATH = os.path.normpath(os.path.join(ROOT_DIRPATH, "../site"))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "127.0.0.1:5009",   # For URL generation.
-    SERVER_HOST = "127.0.0.1",        # For app.run()
-    SERVER_PORT = "5009",             # For app.run()
+    SERVER_NAME = "127.0.0.1:5009",   # For URL generation; app.run() in devel.
     SITE_NAME = "blobserver",
-    SITE_ICON = None,           # Name of file; in '../site' directory
-    SITE_LOGO = None,           # Name of file; in '../site' directory
-    DEBUG = False,
+    SITE_ICON = None,           # Name of file in '../site' directory
+    SITE_LOGO = None,           # Name of file in '../site' directory
     LOG_DEBUG = False,
     LOG_NAME = "blobserver",
     LOG_FILEPATH = None,
@@ -25,7 +22,7 @@ DEFAULT_SETTINGS = dict(
     LOG_FORMAT = "%(levelname)-10s %(asctime)s %(message)s",
     JSON_AS_ASCII = False,
     JSON_SORT_KEYS = False,
-    HOST_LOGO = None,           # Name of file; in '../site' directory
+    HOST_LOGO = None,           # Name of file in '../site' directory
     HOST_NAME = None,
     HOST_URL = None,
     CONTACT_EMAIL = None,

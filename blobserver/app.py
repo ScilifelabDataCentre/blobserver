@@ -132,5 +132,4 @@ app.register_blueprint(blobserver.blobs.blueprint, url_prefix="/blobs")
 
 # This code is used only during development.
 if __name__ == "__main__":
-    app.run(host=app.config["SERVER_HOST"],
-            port=app.config["SERVER_PORT"])
+    app.run()

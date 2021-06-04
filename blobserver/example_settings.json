@@ -1,5 +1,4 @@
 {
-  "DEBUG": true,
   "LOG_DEBUG": true,
   "SECRET_KEY": "this-must-be-a-secret-string-of-characters",
   "SITE_STATIC_DIRPATH": "/path/to/blobserver/site/static",
