@@ -1,5 +1,6 @@
 "Configuration."
 
+import json
 import os
 import os.path
 
@@ -56,7 +57,7 @@ def init(app):
     filepaths.append(os.path.join(SITE_DIRPATH, "settings.json"))
     for filepath in filepaths:
         try:
-            app.config.from_json(filepath)
+            app.config.from_file(filepath, load=json.load)
         except FileNotFoundError:
             pass
         else:

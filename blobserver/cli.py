@@ -2,7 +2,11 @@
 
 import argparse
 import getpass
+import io
+import os
 import sys
+import tarfile
+import time
 
 import flask
 
@@ -25,6 +29,9 @@ def get_parser():
                     help="Create an admin user.")
     x0.add_argument("-U", "--create_user", action="store_true",
                     help="Create a user.")
+    x0.add_argument("-D", "--dump", action="store", metavar="FILENAME",
+                    nargs="?", const=True,
+                    help="Dump all data into a tar.gz file.")
     return p
 
 def execute(pargs):
@@ -48,6 +55,30 @@ def execute(pargs):
             saver.set_role(constants.USER)
             saver.set_status(constants.ENABLED)
             saver["accesskey"] = None
+    elif pargs.dump:
+        if pargs.dump == True:
+            tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
+        else:
+            tarname = pargs.dump
+        if tarname.endswith('.gz'):
+            mode = 'w:gz'
+        else:
+            mode = 'w'
+        outfile = tarfile.open(tarname, mode=mode)
+        dirpath = flask.current_app.config["STORAGE_DIRPATH"]
+        count = 0
+        size = 0
+        for filename in os.listdir(dirpath):
+            info = tarfile.TarInfo(filename)
+            with open(os.path.join(dirpath, filename), "rb") as infile:
+                data = infile.read()
+            info.size = len(data)
+            outfile.addfile(info, io.BytesIO(data))
+            count += 1
+            size += len(data)
+        outfile.close()
+        print(f"Wrote {count} files, {size} bytes to {tarname}")
+
 
 def main():
     "Entry point for command line interface."
