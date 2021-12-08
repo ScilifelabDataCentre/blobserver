@@ -1,11 +1,10 @@
 "About info HTMl endpoints."
 
 import sqlite3
-import sys
 
 import flask
+import jinja2
 
-import blobserver
 from blobserver import constants
 from blobserver import utils
 
@@ -19,16 +18,17 @@ def software():
                                  software=get_software())
 
 def get_software():
-    v = sys.version_info
     return [
-        (constants.SOURCE_NAME, blobserver.__version__, constants.SOURCE_URL),
-        ("Python", f"{v.major}.{v.minor}.{v.micro}", "https://www.python.org/"),
-        ("Flask", flask.__version__, "http://flask.pocoo.org/"),
-        ("Sqlite3", sqlite3.version, "https://www.sqlite.org/index.html"),
-        ("Bootstrap", constants.BOOTSTRAP_VERSION, "https://getbootstrap.com/"),
-        ("jQuery", constants.JQUERY_VERSION, "https://jquery.com/"),
-        ("DataTables", constants.DATATABLES_VERSION, "https://datatables.net/"),
-        ("clipboard.js", constants.CLIPBOARD_VERSION, "https://clipboardjs.com/")
+        ("blobserver", constants.VERSION, constants.URL),
+        ("Python", constants.PYTHON_VERSION, constants.PYTHON_URL),
+        ('Flask', flask.__version__, constants.FLASK_URL),
+        ('Jinja2', jinja2.__version__, constants.JINJA2_URL),
+        ("Sqlite3", sqlite3.version, constants.SQLITE3_URL),
+        ('Bootstrap', constants.BOOTSTRAP_VERSION, constants.BOOTSTRAP_URL),
+        ('jQuery', constants.JQUERY_VERSION, constants.JQUERY_URL),
+        ('jQuery.localtime', constants.JQUERY_LOCALTIME_VERSION, constants.JQUERY_LOCALTIME_URL),
+        ('DataTables', constants.DATATABLES_VERSION, constants.DATATABLES_URL),
+        ('clipboard.js', constants.CLIPBOARD_VERSION, constants.CLIPBOARD_URL),
     ]
 
 @blueprint.route("/contact")

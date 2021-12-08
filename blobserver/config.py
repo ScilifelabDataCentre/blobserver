@@ -7,12 +7,10 @@ import os.path
 from blobserver import constants
 from blobserver import utils
 
-ROOT_DIRPATH = os.path.dirname(os.path.abspath(__file__))
-SITE_DIRPATH = os.path.normpath(os.path.join(ROOT_DIRPATH, "../site"))
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "127.0.0.1:5009",   # For URL generation; app.run() in devel.
+    SERVER_NAME = "localhost:5009",   # For URL generation; app.run() in devel.
     SITE_NAME = "blobserver",
     SITE_ICON = None,           # Name of file in '../site' directory
     SITE_LOGO = None,           # Name of file in '../site' directory
@@ -53,8 +51,8 @@ def init(app):
         filepaths = [os.environ["SETTINGS_FILEPATH"]]
     except KeyError:
         filepaths = []
-    filepaths.append(os.path.join(ROOT_DIRPATH, "settings.json"))
-    filepaths.append(os.path.join(SITE_DIRPATH, "settings.json"))
+    filepaths.append(os.path.join(constants.ROOT, "settings.json"))
+    filepaths.append(os.path.join(constants.SITE, "settings.json"))
     for filepath in filepaths:
         try:
             app.config.from_file(filepath, load=json.load)
@@ -102,9 +100,9 @@ def init(app):
         raise ValueError("SQLITE3_FILEPATH must begin with underscore '_'")
 
     # Record dirpaths for access in app.
-    app.config["ROOT_DIRPATH"] = ROOT_DIRPATH
-    app.config["SITE_DIRPATH"] = SITE_DIRPATH
-    app.config["SITE_STATIC_DIRPATH"] = os.path.join(SITE_DIRPATH, 'static')
+    app.config["ROOT"] = constants.ROOT
+    app.config["SITE"] = constants.SITE
+    app.config["SITE_STATIC"] = os.path.join(constants.SITE, 'static')
 
     # Set the filepath for the Sqlite3 database.
     # Will always be in the storage directory,

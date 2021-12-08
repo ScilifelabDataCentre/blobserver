@@ -9,4 +9,4 @@ blueprint = flask.Blueprint("site", __name__)
 def static(filename):
     "Static file for the site."
     return flask.send_from_directory(
-        flask.current_app.config["SITE_STATIC_DIRPATH"], filename)
+        flask.current_app.config["SITE_STATIC"], filename)
