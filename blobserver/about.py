@@ -4,6 +4,7 @@ import sqlite3
 
 import flask
 import jinja2
+import marko
 
 from blobserver import constants
 from blobserver import utils
@@ -24,6 +25,7 @@ def get_software():
         ('Flask', flask.__version__, constants.FLASK_URL),
         ('Jinja2', jinja2.__version__, constants.JINJA2_URL),
         ("Sqlite3", sqlite3.version, constants.SQLITE3_URL),
+        ("Marko", marko.__version__, constants.MARKO_URL),
         ('Bootstrap', constants.BOOTSTRAP_VERSION, constants.BOOTSTRAP_URL),
         ('jQuery', constants.JQUERY_VERSION, constants.JQUERY_URL),
         ('jQuery.localtime', constants.JQUERY_LOCALTIME_VERSION, constants.JQUERY_LOCALTIME_URL),

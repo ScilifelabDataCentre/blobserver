@@ -4,7 +4,7 @@ import re
 import os.path
 import sys
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 class Constants:
@@ -23,6 +23,7 @@ class Constants:
     FLASK_URL = 'https://pypi.org/project/Flask/'
     JINJA2_URL = 'https://pypi.org/project/Jinja2/'
     SQLITE3_URL = "https://www.sqlite.org/"
+    MARKO_URL = 'https://pypi.org/project/marko/'
 
     BOOTSTRAP_VERSION  = '4.6.1'
     BOOTSTRAP_URL = "https://getbootstrap.com/"
