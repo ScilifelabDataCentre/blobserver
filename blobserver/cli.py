@@ -19,20 +19,28 @@ from blobserver import utils
 
 def get_parser():
     "Get the parser for the command line interface."
-    p = argparse.ArgumentParser(prog="cli.py",
-                                usage="python %(prog)s [options]",
-                                description="blobserver command line interface")
-    p.add_argument("-d", "--debug", action="store_true",
-                    help="Debug logging output.")
+    p = argparse.ArgumentParser(
+        prog="cli.py",
+        usage="python %(prog)s [options]",
+        description="blobserver command line interface",
+    )
+    p.add_argument("-d", "--debug", action="store_true", help="Debug logging output.")
     x0 = p.add_mutually_exclusive_group()
-    x0.add_argument("-A", "--create_admin", action="store_true",
-                    help="Create an admin user.")
-    x0.add_argument("-U", "--create_user", action="store_true",
-                    help="Create a user.")
-    x0.add_argument("-D", "--dump", action="store", metavar="FILENAME",
-                    nargs="?", const=True,
-                    help="Dump all data into a tar.gz file.")
+    x0.add_argument(
+        "-A", "--create_admin", action="store_true", help="Create an admin user."
+    )
+    x0.add_argument("-U", "--create_user", action="store_true", help="Create a user.")
+    x0.add_argument(
+        "-D",
+        "--dump",
+        action="store",
+        metavar="FILENAME",
+        nargs="?",
+        const=True,
+        help="Dump all data into a tar.gz file.",
+    )
     return p
+
 
 def execute(pargs):
     "Execute the command."
@@ -60,10 +68,10 @@ def execute(pargs):
             tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
         else:
             tarname = pargs.dump
-        if tarname.endswith('.gz'):
-            mode = 'w:gz'
+        if tarname.endswith(".gz"):
+            mode = "w:gz"
         else:
-            mode = 'w'
+            mode = "w"
         outfile = tarfile.open(tarname, mode=mode)
         dirpath = flask.current_app.config["STORAGE_DIRPATH"]
         count = 0
@@ -89,6 +97,7 @@ def main():
     with blobserver.app.app.app_context():
         flask.g.db = utils.get_db()
         execute(pargs)
+
 
 if __name__ == "__main__":
     main()

@@ -72,7 +72,9 @@ class UsersBlobs(utils.BrowserTestCase):
 
     def test_2_user_blobs(self):
         "Fetch the list of blobs for the first user in the list."
-        self.driver.get(self.settings["BASE_URL"] + f"/blobs/user/{self.settings['USERNAME']}")
+        self.driver.get(
+            self.settings["BASE_URL"] + f"/blobs/user/{self.settings['USERNAME']}"
+        )
         elem = self.driver.find_element_by_id("blobs")
         elems = elem.find_elements_by_xpath("//tbody/tr")
         self.assertGreater(len(elems), 0)

@@ -15,7 +15,9 @@ class Blob(utils.ApiMixin, unittest.TestCase):
     def test_1_create_blob(self):
         "Create a blob by HTTP PUT."
         # How many blobs for the user to start with?
-        user_url = self.settings["BASE_URL"] + f"blobs/user/{self.settings['USERNAME']}.json"
+        user_url = (
+            self.settings["BASE_URL"] + f"blobs/user/{self.settings['USERNAME']}.json"
+        )
         response = requests.get(user_url, headers=self.headers)
         self.assertEqual(response.status_code, 200)
         count = len(response.json()["blobs"])
@@ -39,7 +41,7 @@ class Blob(utils.ApiMixin, unittest.TestCase):
         # Check the number of blobs for the user.
         response = requests.get(user_url, headers=self.headers)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["blobs"]), count+1)
+        self.assertEqual(len(response.json()["blobs"]), count + 1)
 
         # Delete the blob.
         response = requests.delete(url, headers=self.headers)
@@ -67,7 +69,7 @@ class Blob(utils.ApiMixin, unittest.TestCase):
         data = b"Some fake data."
         response = requests.put(url, headers=self.headers, data=data)
         self.assertEqual(response.status_code, 200)
-        
+
         # Check the data in it.
         response = requests.get(url)
         self.assertEqual(response.status_code, 200)

@@ -34,7 +34,7 @@ def get_settings():
         "BROWSER": "Chrome",
         "BASE_URL": "http://127.0.0.1:5009/",
         "USERNAME": None,
-        "PASSWORD": None
+        "PASSWORD": None,
     }
 
     try:
@@ -46,6 +46,7 @@ def get_settings():
         if result.get(key) is None:
             raise KeyError(f"Missing {key} value in settings.")
     return result
+
 
 def get_browser_driver(name):
     "Return the Selenium driver for the browser given by name."

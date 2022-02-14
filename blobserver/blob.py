@@ -12,26 +12,32 @@ from blobserver import constants
 from blobserver import utils
 import blobserver.user
 
+
 def init(app):
     "Initialize the database; create blob table."
     db = utils.get_db(app)
     with db:
-        db.execute("CREATE TABLE IF NOT EXISTS blobs"
-                   "(iuid TEXT PRIMARY KEY,"
-                   " filename TEXT NOT NULL,"
-                   " username TEXT NOT NULL,"
-                   " description TEXT,"
-                   " md5 TEXT NOT NULL,"
-                   " sha256 TEXT NOT NULL,"
-                   " sha512 TEXT NOT NULL,"
-                   " size INTEGER NOT NULL,"
-                   " created TEXT NOT NULL,"
-                   " modified TEXT NOT NULL)")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
-                   " blobs_filename_index ON blobs (filename COLLATE NOCASE)")
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS blobs"
+            "(iuid TEXT PRIMARY KEY,"
+            " filename TEXT NOT NULL COLLATE NOCASE,"
+            " username TEXT NOT NULL COLLATE NOCASE,"
+            " description TEXT,"
+            " md5 TEXT NOT NULL,"
+            " sha256 TEXT NOT NULL,"
+            " sha512 TEXT NOT NULL,"
+            " size INTEGER NOT NULL,"
+            " created TEXT NOT NULL,"
+            " modified TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS"
+            " blobs_filename_index ON blobs (filename)"
+        )
 
 
 blueprint = flask.Blueprint("blob", __name__)
+
 
 @blueprint.route("/", methods=["GET", "POST"])
 @utils.login_required
@@ -54,8 +60,8 @@ def upload():
                 saver.set_content(infile.read())
         except ValueError as error:
             return utils.error(error)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return flask.redirect(flask.url_for("blob.info", filename=saver["filename"]))
+
 
 @blueprint.route("/<filename>", methods=["GET", "PUT", "DELETE"])
 def blob(filename):
@@ -69,7 +75,8 @@ def blob(filename):
             # Just send error code; appropriate for programmatic use.
             flask.abort(http.client.NOT_FOUND)
         return flask.send_from_directory(
-            flask.current_app.config["STORAGE_DIRPATH"], filename)
+            flask.current_app.config["STORAGE_DIRPATH"], filename
+        )
 
     elif utils.http_PUT():
         data = get_blob_data(filename)
@@ -110,6 +117,7 @@ def blob(filename):
 
     flask.abort(http.client.METHOD_NOT_ALLOWED)
 
+
 @blueprint.route("/<filename>/description", methods=["GET", "PUT", "DELETE"])
 def description(filename):
     "Programmatic interface to the description for a blob."
@@ -129,7 +137,7 @@ def description(filename):
         try:
             with BlobSaver(data) as saver:
                 if flask.request.data:
-                    saver["description"] = flask.request.data.decode('utf-8')
+                    saver["description"] = flask.request.data.decode("utf-8")
                 else:
                     saver["description"] = None
         except ValueError:
@@ -148,6 +156,7 @@ def description(filename):
 
     flask.abort(http.client.METHOD_NOT_ALLOWED)
 
+
 @blueprint.route("/<filename>/info", methods=["GET", "POST", "DELETE"])
 def info(filename):
     "Display the information about the blob. Delete from the web interface."
@@ -156,18 +165,20 @@ def info(filename):
         return utils.error("No such blob.")
 
     if utils.http_GET():
-        return flask.render_template("blob/info.html", 
-                                     data=data,
-                                     allow_update=allow_update(data),
-                                     allow_delete=allow_delete(data),
-                                     commands=get_commands(data))
+        return flask.render_template(
+            "blob/info.html",
+            data=data,
+            allow_update=allow_update(data),
+            allow_delete=allow_delete(data),
+            commands=get_commands(data),
+        )
     elif utils.http_DELETE():
         if not allow_delete(data):
             return utils.error("You are not allowed to delete the blob.")
         delete_blob(data)
         utils.flash_message(f"Deleted blob {data['filename']}")
-        return flask.redirect(
-            flask.url_for("blobs.user", username=data["username"]))
+        return flask.redirect(flask.url_for("blobs.user", username=data["username"]))
+
 
 @blueprint.route("/<filename>/info.json")
 def info_json(filename):
@@ -175,8 +186,10 @@ def info_json(filename):
     data = get_blob_data(filename)
     if not data:
         flask.abort(http.client.NOT_FOUND)
-    result = {"$id": flask.request.url,
-              "href": flask.url_for("blob.blob", filename=filename, _external=True)}
+    result = {
+        "$id": flask.request.url,
+        "href": flask.url_for("blob.blob", filename=filename, _external=True),
+    }
     result.update(data)
     logs = utils.get_logs(data["iuid"])
     if not flask.g.current_user:
@@ -186,6 +199,7 @@ def info_json(filename):
             log.pop("user_agent", None)
     result["logs"] = logs
     return flask.jsonify(result)
+
 
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
@@ -216,8 +230,8 @@ def update(filename):
                     saver.set_content(infile.read())
         except ValueError as error:
             return utils.error(error)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return flask.redirect(flask.url_for("blob.info", filename=saver["filename"]))
+
 
 @blueprint.route("/<filename>/rename", methods=["GET", "POST"])
 @utils.login_required
@@ -237,8 +251,8 @@ def rename(filename):
                 saver.rename(flask.request.form.get("filename"))
         except ValueError as error:
             return utils.error(error)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return flask.redirect(flask.url_for("blob.info", filename=saver["filename"]))
+
 
 @blueprint.route("/<filename>/copy", methods=["GET", "POST"])
 @utils.login_required
@@ -251,8 +265,9 @@ def copy(filename):
         return flask.render_template("blob/copy.html", data=data)
 
     elif utils.http_POST():
-        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
-                                data["filename"])
+        filepath = os.path.join(
+            flask.current_app.config["STORAGE_DIRPATH"], data["filename"]
+        )
         try:
             with open(filepath, "rb") as infile:
                 content = infile.read()
@@ -263,8 +278,8 @@ def copy(filename):
                 saver.set_content(content)
         except ValueError as error:
             return utils.error(error)
-        return flask.redirect(
-            flask.url_for("blob.info", filename=saver["filename"]))
+        return flask.redirect(flask.url_for("blob.info", filename=saver["filename"]))
+
 
 @blueprint.route("/<filename>/logs")
 def logs(filename):
@@ -276,7 +291,8 @@ def logs(filename):
         "logs.html",
         title=f"Blob {data['filename']}",
         cancel_url=flask.url_for(".info", filename=data["filename"]),
-        logs=utils.get_logs(data["iuid"]))
+        logs=utils.get_logs(data["iuid"]),
+    )
 
 
 class BlobSaver(utils.BaseSaver):
@@ -298,18 +314,17 @@ class BlobSaver(utils.BaseSaver):
         check_filename(filename)
         if os.path.basename(filename) != filename:
             raise ValueError("Filename may not contain path specification.")
-        cursor = flask.g.db.cursor()
-        rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE filename=?",
-                       (filename,)))
-        if rows[0][0]:
+        if get_blob_data(filename):
             raise ValueError("A blob with the given filename already exists.")
-        filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
-                                filename)
+        filepath = os.path.join(flask.current_app.config["STORAGE_DIRPATH"], filename)
         if os.path.exists(filepath):
             raise ValueError("A file with the given filename already exists.")
-        os.rename(os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
-                                self.doc["filename"]),
-                  filepath)
+        os.rename(
+            os.path.join(
+                flask.current_app.config["STORAGE_DIRPATH"], self.doc["filename"]
+            ),
+            filepath,
+        )
         self["filename"] = filename
 
     def finalize(self):
@@ -319,126 +334,172 @@ class BlobSaver(utils.BaseSaver):
                 raise ValueError(f"Invalid blob: {key} not set.")
         check_filename(self.doc["filename"])
         if flask.g.current_user["quota"]:
-            if len(self.doc.get("content", [])) + \
-               flask.g.current_user["blobs_size"] > \
-               flask.g.current_user["quota"]:
+            if (
+                len(self.doc.get("content", [])) + flask.g.current_user["blobs_size"]
+                > flask.g.current_user["quota"]
+            ):
                 raise ValueError("User's quota cannot accommodate the blob.")
 
     def upsert(self):
         "Update or insert the blob information into the database."
         cursor = flask.g.db.cursor()
         if "content" in self.doc:  # The content has changed; insert or update.
-            filepath = os.path.join(flask.current_app.config['STORAGE_DIRPATH'],
-                                    self.doc["filename"])
-            rows = list(cursor.execute("SELECT COUNT(*) FROM blobs WHERE"
-                                       " iuid=?",
-                                       (self.doc["iuid"],)))
+            filepath = os.path.join(
+                flask.current_app.config["STORAGE_DIRPATH"], self.doc["filename"]
+            )
+            rows = list(
+                cursor.execute(
+                    "SELECT COUNT(*) FROM blobs WHERE" " iuid=?", (self.doc["iuid"],)
+                )
+            )
             if rows[0][0] == 0:
                 # Defensive paranoid check.
                 if os.path.exists(filepath):
-                    raise ValueError("Cannot overwrite existing non-blobserver"
-                                     " file; use another filename.")
-                keys = ["iuid", "filename", "username", "description", "md5",
-                        "sha256", "sha512", "size", "modified", "created"]
+                    raise ValueError(
+                        "Cannot overwrite existing non-blobserver"
+                        " file; use another filename."
+                    )
+                keys = [
+                    "iuid",
+                    "filename",
+                    "username",
+                    "description",
+                    "md5",
+                    "sha256",
+                    "sha512",
+                    "size",
+                    "modified",
+                    "created",
+                ]
                 fields = ",".join(keys)
                 args = ",".join(["?"] * len(keys))
-                cursor.execute(f"INSERT INTO blobs ({fields}) VALUES ({args})",
-                               [self.doc.get(k) for k in keys])
+                cursor.execute(
+                    f"INSERT INTO blobs ({fields}) VALUES ({args})",
+                    [self.doc.get(k) for k in keys],
+                )
             else:
                 # Username included, to allow admin to change user of blob.
-                keys = ["filename", "username", "description", "md5",
-                        "sha256", "sha512", "size", "modified"]
+                keys = [
+                    "filename",
+                    "username",
+                    "description",
+                    "md5",
+                    "sha256",
+                    "sha512",
+                    "size",
+                    "modified",
+                ]
                 assigns = ",".join([f"{k}=?" for k in keys])
-                values = [self.doc.get(k) for k in keys] +[self.doc["iuid"]]
-                cursor.execute(f"UPDATE blobs SET {assigns} WHERE iuid=?",
-                               values)
+                values = [self.doc.get(k) for k in keys] + [self.doc["iuid"]]
+                cursor.execute(f"UPDATE blobs SET {assigns} WHERE iuid=?", values)
             with open(filepath, "wb") as outfile:
                 outfile.write(self.doc["content"])
         else:  # Filename or description has changed; only update is relevant.
-            cursor.execute("UPDATE blobs SET filename=?, description=?,"
-                           " username=? WHERE iuid=?",
-                           (self.doc["filename"],
-                            self.doc.get("description"),
-                            self.doc.get("username"),
-                            self.doc["iuid"]))
+            cursor.execute(
+                "UPDATE blobs SET filename=?, description=?,"
+                " username=? WHERE iuid=?",
+                (
+                    self.doc["filename"],
+                    self.doc.get("description"),
+                    self.doc.get("username"),
+                    self.doc["iuid"],
+                ),
+            )
+
 
 def get_blob_data(filename):
     """Return the data (not the content) for the blob.
     Return None if not found.
     """
-    if filename.startswith("_"): return None
-    cursor = flask.g.db.cursor()
-    rows = list(cursor.execute("SELECT * FROM blobs WHERE filename=?",
-                               (filename,)))
+    if filename.startswith("_"):
+        return None
+    rows = list(flask.g.db.execute("SELECT * FROM blobs WHERE filename=? COLLATE NOCASE", (filename,)))
     if rows:
         return dict(zip(rows[0].keys(), rows[0]))
     else:
         return None
 
+
 def get_most_recent_blobs():
     "Return the most recently modified blobs."
     cursor = flask.g.db.cursor()
-    rows = list(cursor.execute("SELECT * FROM blobs"
-                               " ORDER BY modified DESC LIMIT ?",
-                               (flask.current_app.config["MOST_RECENT"],)))
+    rows = list(
+        cursor.execute(
+            "SELECT * FROM blobs" " ORDER BY modified DESC LIMIT ?",
+            (flask.current_app.config["MOST_RECENT"],),
+        )
+    )
     return [dict(zip(r.keys(), r)) for r in rows]
+
 
 def delete_blob(data):
     "Delete the blob and its logs."
     with flask.g.db:
         flask.g.db.execute("DELETE FROM logs WHERE iuid=?", (data["iuid"],))
-        flask.g.db.execute("DELETE FROM blobs WHERE filename=?",
-                           (data["filename"],))
-        filepath = os.path.join(flask.current_app.config["STORAGE_DIRPATH"],
-                                data["filename"])
+        flask.g.db.execute("DELETE FROM blobs WHERE filename=? COLLATE NOCASE", (data["filename"],))
+        filepath = os.path.join(
+            flask.current_app.config["STORAGE_DIRPATH"], data["filename"]
+        )
         os.remove(filepath)
+
 
 def check_filename(filename):
     "Raise ValueError if the given filename is invalid."
     if "/" in filename:
         raise ValueError("Filename may not contain slash '/' characters.")
     if filename.startswith("_"):
-        raise ValueError("Filename is not allowed to start"
-                         " with an underscore character.")
+        raise ValueError(
+            "Filename is not allowed to start" " with an underscore character."
+        )
     if filename != html.escape(filename):
         raise ValueError("Filename may not contain HTML-sensitive characters.")
 
+
 def allow_update(data):
-    if not flask.g.current_user: return False
-    if flask.g.am_admin: return True
-    if flask.g.current_user["username"] == data["username"]: return True
+    if not flask.g.current_user:
+        return False
+    if flask.g.am_admin:
+        return True
+    if flask.g.current_user["username"] == data["username"]:
+        return True
     return False
 
+
 def allow_delete(data):
-    if not flask.g.current_user: return False
-    if flask.g.am_admin: return True
-    if flask.g.current_user["username"] == data["username"]: return True
+    if not flask.g.current_user:
+        return False
+    if flask.g.am_admin:
+        return True
+    if flask.g.current_user["username"] == data["username"]:
+        return True
     return False
+
 
 def get_commands(data):
     "Get commands and scripts populated with access key and URLs."
-    if not flask.g.current_user: return None
-    if not allow_update(data): return None
+    if not flask.g.current_user:
+        return None
+    if not allow_update(data):
+        return None
     accesskey = flask.g.current_user.get("accesskey")
-    if not accesskey: return None
-    content_url = flask.url_for('blob.blob',
-                                filename=data['filename'],
-                                _external=True)
-    description_url = flask.url_for('blob.description',
-                                    filename=data['filename'],
-                                    _external=True)
+    if not accesskey:
+        return None
+    content_url = flask.url_for("blob.blob", filename=data["filename"], _external=True)
+    description_url = flask.url_for(
+        "blob.description", filename=data["filename"], _external=True
+    )
     return {
         "curl": {
             "title": "curl commands",
             "text": """<strong>curl</strong> is a command-line utility to
 transfer data to/from web servers. It is available for most computer operating
 systems. See <a target="_blank" href="https://curl.se/">curl.se</a>.""",
-            "content": f'curl {content_url} -H "x-accesskey: {accesskey}"' \
-            ' --upload-file path-to-content-file.ext',
-            "description": f'curl {description_url} -H "x-accesskey: {accesskey}"' \
-            ' --upload-file path-to-description-file.md',
-            "delete": f'curl {content_url} -H "x-accesskey: {accesskey}"' \
-            " -X DELETE"},
+            "content": f'curl {content_url} -H "x-accesskey: {accesskey}"'
+            " --upload-file path-to-content-file.ext",
+            "description": f'curl {description_url} -H "x-accesskey: {accesskey}"'
+            " --upload-file path-to-description-file.md",
+            "delete": f'curl {content_url} -H "x-accesskey: {accesskey}"' " -X DELETE",
+        },
         "python": {
             "title": "Python scripts using 'requests'",
             "text": """<strong>requests</strong> is a Python package for HTTP.
@@ -457,7 +518,7 @@ with open("path-to-content-file.ext", "rb") as infile:
 response = requests.put(url, headers=headers, data=data)
 print(response.status_code)    # Outputs 200
 """,
-                "description": f"""import requests
+            "description": f"""import requests
 
 url = "{description_url}"
 headers = {{"x-accesskey": "{accesskey}"}}
@@ -467,13 +528,13 @@ with open("path-to-description-file.md", "rb") as infile:
 response = requests.put(url, headers=headers, data=data)
 print(response.status_code)    # Outputs 200
 """,
-                "delete": f"""import requests
+            "delete": f"""import requests
 
 url = "{content_url}"
 headers = {{"x-accesskey": "{accesskey}"}}
 response = requests.delete(url, headers=headers)
 print(response.status_code)    # Outputs 204
-"""
+""",
         },
         "r": {
             "title": "R scripts",
@@ -502,6 +563,6 @@ PUT("{description_url}",
 
 DELETE("{content_url}",
        add_headers("x-accesskey"="{accesskey}"))
-"""
-        }
+""",
+        },
     }

@@ -10,33 +10,34 @@ from blobserver import utils
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
-    SERVER_NAME = "localhost:5009",   # For URL generation; app.run() in devel.
-    SITE_NAME = "blobserver",
-    SITE_ICON = None,           # Name of file in '../site' directory
-    SITE_LOGO = None,           # Name of file in '../site' directory
-    LOG_DEBUG = False,
-    LOG_NAME = "blobserver",
-    LOG_FILEPATH = None,
-    LOG_ROTATING = 0,           # Number of backup rotated log files, if any.
-    LOG_FORMAT = "%(levelname)-10s %(asctime)s %(message)s",
-    JSON_AS_ASCII = False,
-    JSON_SORT_KEYS = False,
-    HOST_LOGO = None,           # Name of file in '../site' directory
-    HOST_NAME = None,
-    HOST_URL = None,
-    CONTACT_EMAIL = None,
-    SECRET_KEY = None,          # Must be set in 'settings.json'
-    SALT_LENGTH = 12,
-    STORAGE_DIRPATH = None,     # Must be set in 'settings.json'
-    SQLITE3_FILENAME = "_data.sqlite3",    # Must start with underscore.
-    MOST_RECENT = 40,
-    MIN_PASSWORD_LENGTH = 6,
-    PERMANENT_SESSION_LIFETIME = 7 * 24 * 60 * 60, # seconds; 1 week
-    DEFAULT_QUOTA = 100000000,
-    ADMIN_USERNAME = None,
-    ADMIN_EMAIL = None,
-    ADMIN_PASSWORD = None
+    SERVER_NAME="localhost:5009",  # For URL generation; app.run() in devel.
+    SITE_NAME="blobserver",
+    SITE_ICON=None,  # Name of file in '../site' directory
+    SITE_LOGO=None,  # Name of file in '../site' directory
+    LOG_DEBUG=False,
+    LOG_NAME="blobserver",
+    LOG_FILEPATH=None,
+    LOG_ROTATING=0,  # Number of backup rotated log files, if any.
+    LOG_FORMAT="%(levelname)-10s %(asctime)s %(message)s",
+    JSON_AS_ASCII=False,
+    JSON_SORT_KEYS=False,
+    HOST_LOGO=None,  # Name of file in '../site' directory
+    HOST_NAME=None,
+    HOST_URL=None,
+    CONTACT_EMAIL=None,
+    SECRET_KEY=None,  # Must be set in 'settings.json'
+    SALT_LENGTH=12,
+    STORAGE_DIRPATH=None,  # Must be set in 'settings.json'
+    SQLITE3_FILENAME="_data.sqlite3",  # Must start with underscore.
+    MOST_RECENT=40,
+    MIN_PASSWORD_LENGTH=6,
+    PERMANENT_SESSION_LIFETIME=7 * 24 * 60 * 60,  # seconds; 1 week
+    DEFAULT_QUOTA=100000000,
+    ADMIN_USERNAME=None,
+    ADMIN_EMAIL=None,
+    ADMIN_PASSWORD=None,
 )
+
 
 def init(app):
     """Perform the configuration of the Flask app.
@@ -65,7 +66,7 @@ def init(app):
     # Modify the configuration from environment variables.
     for key, default in DEFAULT_SETTINGS.items():
         try:
-            value = os.environ[key] # Convert those that are not string.
+            value = os.environ[key]  # Convert those that are not string.
             if isinstance(default, bool):
                 value = utils.to_bool(value)
             elif isinstance(default, int):
@@ -78,7 +79,8 @@ def init(app):
     # Clean up filepaths.
     for key in ["LOG_FILEPATH", "STORAGE_DIRPATH"]:
         path = app.config[key]
-        if not path: continue
+        if not path:
+            continue
         path = os.path.expanduser(path)
         path = os.path.expandvars(path)
         path = os.path.normpath(path)
@@ -102,10 +104,11 @@ def init(app):
     # Record dirpaths for access in app.
     app.config["ROOT"] = constants.ROOT
     app.config["SITE"] = constants.SITE
-    app.config["SITE_STATIC"] = os.path.join(constants.SITE, 'static')
+    app.config["SITE_STATIC"] = os.path.join(constants.SITE, "static")
 
     # Set the filepath for the Sqlite3 database.
     # Will always be in the storage directory,
     # but is protected by the beginning underscore.
-    app.config["SQLITE3_FILEPATH"] = os.path.join(app.config["STORAGE_DIRPATH"],
-                                                  app.config["SQLITE3_FILENAME"])
+    app.config["SQLITE3_FILEPATH"] = os.path.join(
+        app.config["STORAGE_DIRPATH"], app.config["SQLITE3_FILENAME"]
+    )

@@ -85,9 +85,13 @@ class Blob(utils.BrowserTestCase):
         time.sleep(1)
 
         # Check the uploaded blob, compare to the file.
-        elem = self.driver.find_element_by_xpath("//div[text()='Blob']/following-sibling::div/a")
+        elem = self.driver.find_element_by_xpath(
+            "//div[text()='Blob']/following-sibling::div/a"
+        )
         self.assertEqual(elem.text, filename)
-        elem = self.driver.find_element_by_xpath("//div[text()='Description']/following-sibling::div/p")
+        elem = self.driver.find_element_by_xpath(
+            "//div[text()='Description']/following-sibling::div/p"
+        )
         self.assertEqual(elem.text, description)
 
         # Find href for blob data, get and compare to source file.
@@ -99,7 +103,9 @@ class Blob(utils.BrowserTestCase):
         self.assertEqual(data, response.content)
 
         # Delete the blob.
-        elem = self.driver.find_element_by_xpath("//button[@type='submit' and contains(., 'Delete')]")
+        elem = self.driver.find_element_by_xpath(
+            "//button[@type='submit' and contains(., 'Delete')]"
+        )
         elem.click()
         time.sleep(1)
         Alert(self.driver).accept()
@@ -172,11 +178,15 @@ class Blob(utils.BrowserTestCase):
         time.sleep(1)
 
         # Check the new description.
-        elem = self.driver.find_element_by_xpath("//div[text()='Description']/following-sibling::div/p")
+        elem = self.driver.find_element_by_xpath(
+            "//div[text()='Description']/following-sibling::div/p"
+        )
         self.assertEqual(elem.text, description)
 
         # Delete the blob.
-        elem = self.driver.find_element_by_xpath("//button[@type='submit' and contains(., 'Delete')]")
+        elem = self.driver.find_element_by_xpath(
+            "//button[@type='submit' and contains(., 'Delete')]"
+        )
         elem.click()
         time.sleep(1)
         Alert(self.driver).accept()

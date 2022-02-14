@@ -6,33 +6,53 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from blobserver import constants
 from blobserver import utils
 
-KEYS = ["iuid", "username", "email", "role", "status",
-        "password", "accesskey", "quota", "created", "modified"]
+KEYS = [
+    "iuid",
+    "username",
+    "email",
+    "role",
+    "status",
+    "password",
+    "accesskey",
+    "quota",
+    "created",
+    "modified",
+]
+
 
 def init(app):
     "Initialize the database: create user table."
     db = utils.get_db(app)
     with db:
-        db.execute("CREATE TABLE IF NOT EXISTS users"
-                   "(iuid TEXT PRIMARY KEY,"
-                   " username TEXT NOT NULL,"
-                   " email TEXT NOT NULL,"
-                   " role TEXT NOT NULL,"
-                   " status TEXT NOT NULL,"
-                   " password TEXT,"
-                   " accesskey TEXT,"
-                   " quota INTEGER,"
-                   " created TEXT NOT NULL,"
-                   " modified TEXT NOT NULL)")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
-                   " users_username_index ON users (username COLLATE NOCASE)")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
-                   " users_email_index ON users (email COLLATE NOCASE)")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS"
-                   " users_accesskey_index ON users (accesskey)")
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS users"
+            "(iuid TEXT PRIMARY KEY,"
+            " username TEXT NOT NULL COLLATE NOCASE,"
+            " email TEXT NOT NULL COLLATE NOCASE,"
+            " role TEXT NOT NULL,"
+            " status TEXT NOT NULL,"
+            " password TEXT,"
+            " accesskey TEXT,"
+            " quota INTEGER,"
+            " created TEXT NOT NULL,"
+            " modified TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS"
+            " users_username_index ON users (username)"
+        )
+        db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS"
+            " users_email_index ON users (email)"
+        )
+        db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS"
+            " users_accesskey_index ON users (accesskey)"
+        )
 
 
 blueprint = flask.Blueprint("user", __name__)
+
 
 @blueprint.route("/login", methods=["GET", "POST"])
 def login():
@@ -40,8 +60,9 @@ def login():
     Creates the admin user specified in the settings.json, if not done.
     """
     if utils.http_GET():
-        return flask.render_template("user/login.html",
-                                     next=flask.request.args.get("next"))
+        return flask.render_template(
+            "user/login.html", next=flask.request.args.get("next")
+        )
     elif utils.http_POST():
         username = flask.request.form.get("username")
         password = flask.request.form.get("password")
@@ -59,6 +80,7 @@ def login():
         except ValueError:
             return utils.error("Invalid user or password, or account disabled.")
 
+
 @blueprint.route("/logout", methods=["POST"])
 def logout():
     "Logout from the user account."
@@ -66,6 +88,7 @@ def logout():
     if username:
         utils.get_logger().info(f"logged out {username}")
     return flask.redirect(flask.url_for("home"))
+
 
 @blueprint.route("/register", methods=["GET", "POST"])
 @utils.admin_required
@@ -93,24 +116,28 @@ def register():
         utils.get_logger().info(f"registered user {user['username']}")
         return flask.redirect(flask.url_for("home"))
 
+
 @blueprint.route("/password", methods=["GET", "POST"])
 @utils.login_required
 def password():
     "Set the password for a user account, and login user."
     if utils.http_GET():
-        username = flask.request.args.get("username") or \
-                   flask.g.current_user["username"]
+        username = (
+            flask.request.args.get("username") or flask.g.current_user["username"]
+        )
         return flask.render_template("user/password.html", username=username)
 
     elif utils.http_POST():
         try:
             try:
                 username = flask.request.form.get("username") or ""
-                if not username: raise ValueError
+                if not username:
+                    raise ValueError
                 user = get_user(username=username)
-                if user is None: raise ValueError
+                if user is None:
+                    raise ValueError
                 if am_admin_and_not_self(user):
-                    pass        # No check for current password.
+                    pass  # No check for current password.
                 else:
                     password = flask.request.form.get("current_password") or ""
                     if not check_password_hash(user["password"], password):
@@ -129,6 +156,7 @@ def password():
             do_login(username, password)
         return flask.redirect(flask.url_for("user.display", username=username))
 
+
 @blueprint.route("/display/<identifier:username>")
 @utils.login_required
 def display(username):
@@ -140,8 +168,10 @@ def display(username):
         return utils.error("Access not allowed.")
     return flask.render_template("user/display.html", user=user)
 
-@blueprint.route("/display/<identifier:username>/edit",
-                 methods=["GET", "POST", "DELETE"])
+
+@blueprint.route(
+    "/display/<identifier:username>/edit", methods=["GET", "POST", "DELETE"]
+)
 @utils.login_required
 def edit(username):
     "Edit the user display. Or delete the user."
@@ -153,10 +183,12 @@ def edit(username):
 
     if utils.http_GET():
         deletable = am_admin_and_not_self(user) and user["blobs_count"] == 0
-        return flask.render_template("user/edit.html",
-                                     user=user,
-                                     change_role=am_admin_and_not_self(user),
-                                     deletable=deletable)
+        return flask.render_template(
+            "user/edit.html",
+            user=user,
+            change_role=am_admin_and_not_self(user),
+            deletable=deletable,
+        )
 
     elif utils.http_POST():
         with UserSaver(user) as saver:
@@ -165,10 +197,11 @@ def edit(username):
                 if email != user["email"]:
                     saver.set_email(email)
                 try:
-                    quota = flask.request.form.get('quota') or None
+                    quota = flask.request.form.get("quota") or None
                     if quota:
                         quota = int(quota)
-                        if quota < 0: raise ValueError
+                        if quota < 0:
+                            raise ValueError
                 except (ValueError, TypeError):
                     pass
                 else:
@@ -177,23 +210,23 @@ def edit(username):
                 saver.set_role(flask.request.form.get("role"))
             if flask.request.form.get("accesskey"):
                 saver.set_accesskey()
-        return flask.redirect(
-            flask.url_for(".display", username=user["username"]))
+        return flask.redirect(flask.url_for(".display", username=user["username"]))
 
     elif utils.http_DELETE():
         if user["blobs_count"] != 0:
             return utils.error("Cannot delete non-empty user account.")
         with flask.g.db:
-            flask.g.db.execute("DELETE FROM logs WHERE iuid=?",(user["iuid"],))
-            flask.g.db.execute("DELETE FROM users "
-                               " WHERE username=? COLLATE NOCASE",
-                               (username,))
+            flask.g.db.execute("DELETE FROM logs WHERE iuid=?", (user["iuid"],))
+            flask.g.db.execute(
+                "DELETE FROM users " " WHERE username=? COLLATE NOCASE", (username,)
+            )
         utils.flash_message(f"Deleted user {username}.")
         utils.get_logger().info(f"deleted user {username}")
         if flask.g.am_admin:
             return flask.redirect(flask.url_for(".all"))
         else:
             return flask.redirect(flask.url_for("home"))
+
 
 @blueprint.route("/display/<identifier:username>/logs")
 @utils.login_required
@@ -208,13 +241,16 @@ def logs(username):
         "logs.html",
         title=f"User {user['username']}",
         cancel_url=flask.url_for(".display", username=user["username"]),
-        logs=utils.get_logs(user["iuid"]))
+        logs=utils.get_logs(user["iuid"]),
+    )
+
 
 @blueprint.route("/all")
 @utils.admin_required
 def all():
     "Display list of all users."
     return flask.render_template("user/all.html", users=get_users())
+
 
 @blueprint.route("/enable/<identifier:username>", methods=["POST"])
 @utils.admin_required
@@ -229,6 +265,7 @@ def enable(username):
         saver.set_status(constants.ENABLED)
     utils.get_logger().info(f"enabled user {username}")
     return flask.redirect(flask.url_for(".display", username=username))
+
 
 @blueprint.route("/disable/<identifier:username>", methods=["POST"])
 @utils.admin_required
@@ -301,7 +338,8 @@ class UserSaver(utils.BaseSaver):
         if len(password) < flask.current_app.config["MIN_PASSWORD_LENGTH"]:
             raise ValueError("Password too short.")
         self.doc["password"] = generate_password_hash(
-            password, salt_length=flask.current_app.config["SALT_LENGTH"])
+            password, salt_length=flask.current_app.config["SALT_LENGTH"]
+        )
 
     def set_accesskey(self):
         "Set a new access key."
@@ -311,24 +349,32 @@ class UserSaver(utils.BaseSaver):
         "Actually insert or update the user in the database."
         # Cannot use the Sqlite3 native UPSERT: was included only in v 3.24.0
         cursor = flask.g.db.cursor()
-        rows = list(cursor.execute("SELECT COUNT(*) FROM users WHERE iuid=?",
-                                   (self.doc["iuid"],)))
+        rows = list(
+            cursor.execute(
+                "SELECT COUNT(*) FROM users WHERE iuid=?", (self.doc["iuid"],)
+            )
+        )
         if rows[0][0] == 0:
             with flask.g.db:
-                cursor.execute(f"INSERT INTO users ({','.join(KEYS)})"
-                               f" VALUES ({','.join('?'*len(KEYS))})",
-                               [self.doc.get(k) for k in KEYS])
+                cursor.execute(
+                    f"INSERT INTO users ({','.join(KEYS)})"
+                    f" VALUES ({','.join('?'*len(KEYS))})",
+                    [self.doc.get(k) for k in KEYS],
+                )
         else:
             with flask.g.db:
-                keys = KEYS[1:] # Skip 'iuid'
+                keys = KEYS[1:]  # Skip 'iuid'
                 assignments = [f"{k}=?" for k in keys]
                 values = [self.doc.get(k) for k in keys]
                 values.append(self.doc["iuid"])
-                cursor.execute("UPDATE users SET"
-                               f" {','.join(assignments)}"
-                               "WHERE iuid=?", values)
+                cursor.execute(
+                    "UPDATE users SET" f" {','.join(assignments)}" "WHERE iuid=?",
+                    values,
+                )
+
 
 # Utility functions
+
 
 def create_admin_user():
     """Check if an admin user is specified by settings.
@@ -336,14 +382,15 @@ def create_admin_user():
     """
     flask.g.db = utils.get_db()
     config = flask.current_app.config
-    if not (config["ADMIN_USERNAME"] and
-            config["ADMIN_EMAIL"] and
-            config["ADMIN_PASSWORD"]):
+    if not (
+        config["ADMIN_USERNAME"] and config["ADMIN_EMAIL"] and config["ADMIN_PASSWORD"]
+    ):
         utils.get_logger().info("ADMIN account not specified in settings.")
         return
     if get_user(username=config["ADMIN_USERNAME"]):
-        utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}'"
-                                " exists already.")
+        utils.get_logger().info(
+            f"Admin user '{config['ADMIN_USERNAME']}'" " exists already."
+        )
         return
     with UserSaver() as saver:
         saver.set_username(config["ADMIN_USERNAME"])
@@ -352,6 +399,7 @@ def create_admin_user():
         saver.set_role(constants.ADMIN)
         saver.set_status(constants.ENABLED)
     utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}' created.")
+
 
 def get_user(username=None, email=None, accesskey=None):
     """Return the user for the given username, email or accesskey.
@@ -375,8 +423,9 @@ def get_user(username=None, email=None, accesskey=None):
         user["blobs_count"] = user_blobs_count(user)
         user["blobs_size"] = user_blobs_size(user)
         if user["quota"]:
-            user["usage"] = round(100.0 * float(user['blobs_size']) / user['quota'], 1)
+            user["usage"] = round(100.0 * float(user["blobs_size"]) / user["quota"], 1)
         return user
+
 
 def get_users(role=None, status=None):
     """Get the users optionally specified by role and status.
@@ -390,31 +439,37 @@ def get_users(role=None, status=None):
     elif status is None:
         rows = cursor.execute("SELECT * FROM users WHERE role=?", (role,))
     else:
-        rows = cursor.execute("SELECT * FROM users WHERE role=? AND status=?",
-                              (role, status))
+        rows = cursor.execute(
+            "SELECT * FROM users WHERE role=? AND status=?", (role, status)
+        )
     users = [dict(zip(row.keys(), row)) for row in rows]
     for user in users:
         user["blobs_count"] = user_blobs_count(user)
         user["blobs_size"] = user_blobs_size(user)
-    return  users
+    return users
+
 
 def get_current_user():
     """Return the user for the current session.
     Return None if no such user, or disabled.
     """
-    user = get_user(username=flask.session.get("username"),
-                    accesskey=flask.request.headers.get("x-accesskey"))
+    user = get_user(
+        username=flask.session.get("username"),
+        accesskey=flask.request.headers.get("x-accesskey"),
+    )
     if user is None or user["status"] != constants.ENABLED:
         flask.session.pop("username", None)
         return None
     return user
+
 
 def do_login(username, password):
     """Set the session cookie if successful login.
     Raise ValueError if some problem.
     """
     user = get_user(username=username)
-    if user is None: raise ValueError
+    if user is None:
+        raise ValueError
     if not check_password_hash(user["password"], password):
         raise ValueError
     if user["status"] != constants.ENABLED:
@@ -423,28 +478,36 @@ def do_login(username, password):
     flask.session.permanent = True
     utils.get_logger().info(f"logged in {user['username']}")
 
+
 def am_admin_or_self(user):
     "Is the current user admin, or the same as the given user?"
-    if not flask.g.current_user: return False
-    if flask.g.am_admin: return True
+    if not flask.g.current_user:
+        return False
+    if flask.g.am_admin:
+        return True
     return flask.g.current_user["username"] == user["username"]
+
 
 def am_admin_and_not_self(user):
     "Is the current user admin and not the same as the given user?"
-    if not flask.g.current_user: return False
-    return flask.g.am_admin and \
-        flask.g.current_user["username"] != user["username"]
+    if not flask.g.current_user:
+        return False
+    return flask.g.am_admin and flask.g.current_user["username"] != user["username"]
+
 
 def user_blobs_count(user):
     "Return the number of blobs the user has."
     cursor = flask.g.db.cursor()
-    rows = cursor.execute("SELECT COUNT(*) FROM blobs WHERE username=?",
-                          (user["username"],))
+    rows = cursor.execute(
+        "SELECT COUNT(*) FROM blobs WHERE username=?", (user["username"],)
+    )
     return list(rows)[0][0] or 0
+
 
 def user_blobs_size(user):
     "Return the total number of bytes for the blobs the user has."
     cursor = flask.g.db.cursor()
-    rows = cursor.execute("SELECT SUM(size) FROM blobs WHERE username=?",
-                          (user["username"],))
+    rows = cursor.execute(
+        "SELECT SUM(size) FROM blobs WHERE username=?", (user["username"],)
+    )
     return list(rows)[0][0] or 0

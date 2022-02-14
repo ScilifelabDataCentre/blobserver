@@ -62,11 +62,15 @@ class LoginUser(utils.BrowserTestCase):
         elem.send_keys(Keys.RETURN)
 
         # Home page. Find link to user account page.
-        elem = self.driver.find_element_by_link_text(f"User {self.settings['USERNAME']}")
+        elem = self.driver.find_element_by_link_text(
+            f"User {self.settings['USERNAME']}"
+        )
         elem.click()
 
         # User account page. Find access key.
-        elem = self.driver.find_element_by_xpath("//th[text()='Access key']/following-sibling::td")
+        elem = self.driver.find_element_by_xpath(
+            "//th[text()='Access key']/following-sibling::td"
+        )
         self.assertTrue(elem.text == "-" or len(elem.text) == 32)
 
     def test_3_logout(self):
@@ -90,7 +94,9 @@ class LoginUser(utils.BrowserTestCase):
         elem.send_keys(Keys.RETURN)
 
         # Home page again. Find link to user account page.
-        elem = self.driver.find_element_by_link_text(f"User {self.settings['USERNAME']}")
+        elem = self.driver.find_element_by_link_text(
+            f"User {self.settings['USERNAME']}"
+        )
         elem.click()
 
         # User account page.
