@@ -42,8 +42,7 @@ def init(app):
             " users_username_index ON users (username)"
         )
         db.execute(
-            "CREATE UNIQUE INDEX IF NOT EXISTS"
-            " users_email_index ON users (email)"
+            "CREATE UNIQUE INDEX IF NOT EXISTS" " users_email_index ON users (email)"
         )
         db.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS"

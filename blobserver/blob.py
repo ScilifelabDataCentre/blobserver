@@ -413,7 +413,11 @@ def get_blob_data(filename):
     """
     if filename.startswith("_"):
         return None
-    rows = list(flask.g.db.execute("SELECT * FROM blobs WHERE filename=? COLLATE NOCASE", (filename,)))
+    rows = list(
+        flask.g.db.execute(
+            "SELECT * FROM blobs WHERE filename=? COLLATE NOCASE", (filename,)
+        )
+    )
     if rows:
         return dict(zip(rows[0].keys(), rows[0]))
     else:
@@ -436,7 +440,9 @@ def delete_blob(data):
     "Delete the blob and its logs."
     with flask.g.db:
         flask.g.db.execute("DELETE FROM logs WHERE iuid=?", (data["iuid"],))
-        flask.g.db.execute("DELETE FROM blobs WHERE filename=? COLLATE NOCASE", (data["filename"],))
+        flask.g.db.execute(
+            "DELETE FROM blobs WHERE filename=? COLLATE NOCASE", (data["filename"],)
+        )
         filepath = os.path.join(
             flask.current_app.config["STORAGE_DIRPATH"], data["filename"]
         )
