@@ -55,29 +55,24 @@ blueprint = flask.Blueprint("user", __name__)
 
 @blueprint.route("/login", methods=["GET", "POST"])
 def login():
-    """Login to a user account.
-    Creates the admin user specified in the settings.json, if not done.
-    """
+    "Login to a user account."
     if utils.http_GET():
-        return flask.render_template(
-            "user/login.html", next=flask.request.args.get("next")
-        )
+        flask.session["login_target_url"] = flask.request.referrer
+        return flask.render_template("user/login.html")
+
     elif utils.http_POST():
-        username = flask.request.form.get("username")
-        password = flask.request.form.get("password")
         try:
-            if username and password:
-                do_login(username, password)
-            else:
-                raise ValueError
-            try:
-                next = flask.request.form["next"]
-            except KeyError:
-                return flask.redirect(flask.url_for("home"))
-            else:
-                return flask.redirect(next)
+            do_login(flask.request.form.get("username"), flask.request.form.get("password"))
         except ValueError:
-            return utils.error("Invalid user or password, or account disabled.")
+            return utils.error(
+                "Invalid user or password, or account disabled.",
+                url=flask.url_for(".login"),
+            )
+        try:
+            url = flask.session.pop("login_target_url")
+        except KeyError:
+            url = flask.url_for("home")
+        return flask.redirect(url)
 
 
 @blueprint.route("/logout", methods=["POST"])
@@ -466,6 +461,10 @@ def do_login(username, password):
     """Set the session cookie if successful login.
     Raise ValueError if some problem.
     """
+    if not username:
+        raise ValueError
+    if not password:
+        raise ValueError
     user = get_user(username=username)
     if user is None:
         raise ValueError
@@ -474,7 +473,6 @@ def do_login(username, password):
     if user["status"] != constants.ENABLED:
         raise ValueError
     flask.session["username"] = user["username"]
-    flask.session.permanent = True
     utils.get_logger().info(f"logged in {user['username']}")
 
 

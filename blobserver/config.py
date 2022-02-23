@@ -36,6 +36,7 @@ DEFAULT_SETTINGS = dict(
     ADMIN_USERNAME=None,
     ADMIN_EMAIL=None,
     ADMIN_PASSWORD=None,
+    MARKDOWN_URL="https://www.markdownguide.org/basic-syntax/",
 )
 
 
