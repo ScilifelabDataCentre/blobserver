@@ -62,7 +62,9 @@ def login():
 
     elif utils.http_POST():
         try:
-            do_login(flask.request.form.get("username"), flask.request.form.get("password"))
+            do_login(
+                flask.request.form.get("username"), flask.request.form.get("password")
+            )
         except ValueError:
             return utils.error(
                 "Invalid user or password, or account disabled.",
