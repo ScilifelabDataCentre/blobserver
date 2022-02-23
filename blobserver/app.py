@@ -49,9 +49,11 @@ def prepare():
     "Open the database connection; get the current user."
     flask.g.db = utils.get_db()
     flask.g.current_user = blobserver.user.get_current_user()
-    flask.g.am_admin = (
-        flask.g.current_user and flask.g.current_user["role"] == constants.ADMIN
-    )
+    if flask.g.current_user:
+        flask.session.permanent = True
+        flask.g.am_admin = flask.g.current_user["role"] == constants.ADMIN
+    else:
+        flask.g.am_admin = False
 
 
 app.after_request(utils.log_access)
