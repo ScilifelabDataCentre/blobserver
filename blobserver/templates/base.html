@@ -88,10 +88,8 @@
                class="btn btn-outline-secondary my-2 my-sm-0" role="button">
               User {{ g.current_user['username'] }}</a>
             {% else %}
-            <form id="login-formlink"
-                  action="{{ url_for('user.login') }}" method="GET"
+            <form action="{{ url_for('user.login') }}" method="GET"
                   class="form-inline my-2 my-sm-0">
-              <input type="hidden" name="next" value="{{ request.url }}">
               <button type="submit" class="btn btn-secondary">Login</button>
             </form>
             {% endif %}

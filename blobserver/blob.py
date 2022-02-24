@@ -42,7 +42,7 @@ blueprint = flask.Blueprint("blob", __name__)
 @blueprint.route("/", methods=["GET", "POST"])
 @utils.login_required
 def upload():
-    "Upload a new blob via the web interface."
+    "Web: Upload a new blob."
     if utils.http_GET():
         return flask.render_template("blob/upload.html")
 
@@ -65,8 +65,8 @@ def upload():
 
 @blueprint.route("/<filename>", methods=["GET", "PUT", "DELETE"])
 def blob(filename):
-    """Return the blob itself.
-    Programmatically create a new blob (PUT), update an existing blob (PUT),
+    """Web: Return the blob itself.
+    API: Create a new blob (PUT), update an existing blob (PUT),
     or delete an existing blob (DELETE).
     """
     if utils.http_GET() or utils.http_HEAD():
@@ -120,14 +120,14 @@ def blob(filename):
 
 @blueprint.route("/<filename>/description", methods=["GET", "PUT", "DELETE"])
 def description(filename):
-    "Programmatic interface to the description for a blob."
+    "API: Get, modify or delete the description for a blob."
     data = get_blob_data(filename)
     if not data:
         # Just send error code; appropriate for programmatic use.
         flask.abort(http.client.NOT_FOUND)
 
     if utils.http_GET() or utils.http_HEAD():
-        response = flask.make_response(doc.get("description") or "")
+        response = flask.make_response(data.get("description") or "")
         response.headers.set("Content-Type", "text/plain; charset=utf-8")
         return response
 
@@ -159,7 +159,7 @@ def description(filename):
 
 @blueprint.route("/<filename>/info", methods=["GET", "POST", "DELETE"])
 def info(filename):
-    "Display the information about the blob. Delete from the web interface."
+    "Web: Display the information about the blob. Delete."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -182,7 +182,7 @@ def info(filename):
 
 @blueprint.route("/<filename>/info.json")
 def info_json(filename):
-    "Return JSON of the information about the blob, including the log."
+    "API: Return JSON of the information about the blob, including the log."
     data = get_blob_data(filename)
     if not data:
         flask.abort(http.client.NOT_FOUND)
@@ -204,7 +204,7 @@ def info_json(filename):
 @blueprint.route("/<filename>/update", methods=["GET", "POST"])
 @utils.login_required
 def update(filename):
-    "Update the content and/or the description of a blob."
+    "Web: Update the content and/or the description of a blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -236,6 +236,7 @@ def update(filename):
 @blueprint.route("/<filename>/rename", methods=["GET", "POST"])
 @utils.login_required
 def rename(filename):
+    "Web: Rename the blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -257,6 +258,7 @@ def rename(filename):
 @blueprint.route("/<filename>/copy", methods=["GET", "POST"])
 @utils.login_required
 def copy(filename):
+    "Web: Copy the blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")
@@ -283,7 +285,7 @@ def copy(filename):
 
 @blueprint.route("/<filename>/logs")
 def logs(filename):
-    "Display the log records of the given blob."
+    "Web: Display the log records of the given blob."
     data = get_blob_data(filename)
     if not data:
         return utils.error("No such blob.")

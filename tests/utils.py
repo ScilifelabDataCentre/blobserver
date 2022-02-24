@@ -1,62 +1,34 @@
-"Some utilities for the tests."
+"Utilities for tests."
 
+import http.client
 import json
-import unittest
 
-import selenium.webdriver
-
-
-class BrowserTestCase(unittest.TestCase):
-    "Browser driver setup."
-
-    def setUp(self):
-        self.settings = get_settings()
-        self.driver = get_browser_driver(self.settings["BROWSER"])
-
-    def tearDown(self):
-        self.driver.close()
+BLOBSERVER_VERSION = "1.1.0"
 
 
-class ApiMixin:
-    "Provides method the check the validity of a result against its schema."
-
-    def setUp(self):
-        self.settings = get_settings()
-        self.headers = {"x-accesskey": self.settings["ACCESSKEY"]}
-
-
-def get_settings():
-    """Get the settings from
-    1) default
-    2) settings file
-    """
-    result = {
-        "BROWSER": "Chrome",
-        "BASE_URL": "http://127.0.0.1:5009/",
-        "USERNAME": None,
-        "PASSWORD": None,
-    }
-
-    try:
-        with open("settings.json", "rb") as infile:
-            result.update(json.load(infile))
-    except IOError:
-        pass
+def get_settings(**defaults):
+    "Update the default settings by the contents of the 'settings.json' file."
+    result = defaults.copy()
+    with open("settings.json", "rb") as infile:
+        data = json.load(infile)
     for key in result:
+        try:
+            result[key] = data[key]
+        except KeyError:
+            pass
         if result.get(key) is None:
             raise KeyError(f"Missing {key} value in settings.")
+    # Remove any trailing slash in the base URL.
+    result["BASE_URL"] = result["BASE_URL"].rstrip("/")
     return result
 
 
-def get_browser_driver(name):
-    "Return the Selenium driver for the browser given by name."
-    if name == "Chrome":
-        return selenium.webdriver.Chrome()
-    elif name == "Firefox":
-        return selenium.webdriver.Firefox()
-    elif name == "Edge":
-        return selenium.webdriver.Edge()
-    elif name == "Safari":
-        return selenium.webdriver.Safari()
-    else:
-        raise ValueError(f"Unknown browser driver '{name}'.")
+class Writer:
+    def __init__(self):
+        self.outfile = open("out.txt", "w")
+
+    def __call__(self, data):
+        self.outfile.write(json.dumps(data))
+
+    def __delete__(self):
+        self.outfile.close()

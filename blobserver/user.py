@@ -57,12 +57,13 @@ blueprint = flask.Blueprint("user", __name__)
 def login():
     "Login to a user account."
     if utils.http_GET():
-        flask.session["login_target_url"] = flask.request.referrer
         return flask.render_template("user/login.html")
 
     elif utils.http_POST():
         try:
-            do_login(flask.request.form.get("username"), flask.request.form.get("password"))
+            do_login(
+                flask.request.form.get("username"), flask.request.form.get("password")
+            )
         except ValueError:
             return utils.error(
                 "Invalid user or password, or account disabled.",
@@ -473,6 +474,7 @@ def do_login(username, password):
     if user["status"] != constants.ENABLED:
         raise ValueError
     flask.session["username"] = user["username"]
+    flask.session.permanent = True
     utils.get_logger().info(f"logged in {user['username']}")
 
 

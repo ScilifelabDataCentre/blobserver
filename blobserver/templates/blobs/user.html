@@ -47,7 +47,7 @@
 
 {% block actions %}
 {% if g.current_user and user['username'] == g.current_user['username'] %}
-<a href="{{ url_for('blob.upload') }}"
+<a href="{{ url_for('blob.upload') }}" id="upload"
    role="button" class="btn btn-block btn-primary">Upload</a>
 {% endif %} {# if g.current_user ... #}
 {% endblock %} {# block actions #}
