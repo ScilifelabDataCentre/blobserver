@@ -23,7 +23,9 @@ import utils
 @pytest.fixture(scope="module")
 def settings():
     "Get the settings from file 'settings.json' in this directory."
-    return utils.get_settings(BASE_URL="http://localhost:5009", USERNAME=None, ACCESSKEY=None)
+    return utils.get_settings(
+        BASE_URL="http://localhost:5009", USERNAME=None, ACCESSKEY=None
+    )
 
 
 def test_user_blobs_info(settings, page):
@@ -70,7 +72,7 @@ def test_user_blob(settings, page):
     assert response.content == data
 
     # Modify the data, and update.
-    data = data[:len(data)-10]
+    data = data[: len(data) - 10]
     response = requests.put(url, headers=headers, data=data)
     assert response.status_code == http.client.OK
     response = requests.get(url)

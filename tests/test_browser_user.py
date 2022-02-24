@@ -24,7 +24,9 @@ import utils
 @pytest.fixture(scope="module")
 def settings():
     "Get the settings from file 'settings.json' in this directory."
-    return utils.get_settings(BASE_URL="http://localhost:5009", USERNAME=None, PASSWORD=None, ACCESSKEY=None)
+    return utils.get_settings(
+        BASE_URL="http://localhost:5009", USERNAME=None, PASSWORD=None, ACCESSKEY=None
+    )
 
 
 def login_user(settings, page):

@@ -32,4 +32,3 @@ class Writer:
 
     def __delete__(self):
         self.outfile.close()
-    

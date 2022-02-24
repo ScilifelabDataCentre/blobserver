@@ -32,6 +32,7 @@ def test_status(settings, page):
     data = response.json()
     assert data["status"] == "ok"
 
+
 def test_about(settings, page):  # 'page' fixture from 'pytest-playwright'
     "Test access to 'About' pages."
     page.set_default_navigation_timeout(3000)
@@ -83,5 +84,5 @@ def test_search(settings, page):
     page.fill('input[type="search"]', "test")
     page.press('input[type="search"]', "Enter")
     assert page.url == f"{settings['BASE_URL']}/blobs/search?term=test"
-    
+
     # page.wait_for_timeout(3000)
