@@ -20,7 +20,7 @@
 
 <div class="row">
   <div class="col-md-2 font-weight-bold text-right">Description</div>
-  <div class="col-md">{{ data['description'] | markdown }}</div>
+  <div id="description" class="col-md">{{ data['description'] | markdown }}</div>
 </div>
 
 <div class="row">
@@ -133,7 +133,7 @@
 
 {% block actions %}
 {% if allow_update %}
-<a href="{{ url_for('blob.update', filename=data['filename']) }}"
+<a href="{{ url_for('blob.update', filename=data['filename']) }}" id="update"
    role="button" class="btn btn-block btn-primary">Update</a>
 {% endif %} {# if allow_update #}
 {% if allow_update %}
@@ -150,7 +150,7 @@
         method="POST">
     {{ csrf_token() }}
     <input type="hidden" name="_http_method" value="DELETE">
-    <button type="submit" class="btn btn-block btn-sm btn-danger"
+    <button type="submit" class="btn btn-block btn-sm btn-danger" id="delete"
       onclick="return confirm('Really delete this blob?')">Delete</button>
   </form>
 </div>

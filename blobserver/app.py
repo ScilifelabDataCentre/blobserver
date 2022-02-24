@@ -50,7 +50,6 @@ def prepare():
     flask.g.db = utils.get_db()
     flask.g.current_user = blobserver.user.get_current_user()
     if flask.g.current_user:
-        flask.session.permanent = True
         flask.g.am_admin = flask.g.current_user["role"] == constants.ADMIN
     else:
         flask.g.am_admin = False
