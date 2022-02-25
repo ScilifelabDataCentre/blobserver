@@ -388,13 +388,16 @@ def create_first_admin():
             f"Admin user '{config['ADMIN_USERNAME']}'" " exists already."
         )
         return
-    with UserSaver() as saver:
-        saver.set_username(config["ADMIN_USERNAME"])
-        saver.set_email(config["ADMIN_EMAIL"])
-        saver.set_password(config["ADMIN_PASSWORD"])
-        saver.set_role(constants.ADMIN)
-        saver.set_status(constants.ENABLED)
-    utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}' created.")
+    try:
+        with UserSaver() as saver:
+            saver.set_username(config["ADMIN_USERNAME"])
+            saver.set_email(config["ADMIN_EMAIL"])
+            saver.set_password(config["ADMIN_PASSWORD"])
+            saver.set_role(constants.ADMIN)
+            saver.set_status(constants.ENABLED)
+        utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}' created.")
+    except ValueError as error:
+        utils.get_logger().error("Could not create admin user; misconfiguration.")
 
 
 def get_user(username=None, email=None, accesskey=None):
