@@ -1,0 +1,16 @@
+{
+  "DEBUG": true,
+  "LOG_DEBUG": true,
+  "SECRET_KEY": "change-to-some-secret-string-of-characters",
+  "STORAGE_DIRPATH": "/home/per/Dropbox/data/blobserver",
+  "SITE_ICON": "scilifelab-32x32.png",
+  "SITE_LOGO": "scilifelab-32x32.png",
+  "SITE_NAME": "SciLifeLab blobserver",
+  "HOST_NAME": "SciLifeLab Data Centre",
+  "HOST_URL": "https://scilifelab.se/data",
+  "HOST_LOGO": "scilifelab-32x32.png",
+  "CONTACT_EMAIL": "datacentre@scilifelab.se",
+  "ADMIN_USERNAME": "admin",
+  "ADMIN_EMAIL": "datacentre@scilifelab.se",
+  "ADMIN_PASSWORD": "change-this-after-creation"
+}
