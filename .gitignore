@@ -1,6 +1,6 @@
 *.log
 *~
 site
-settings.json
+tests/settings.json
 .pytest_cache
 __pycache__

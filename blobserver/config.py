@@ -33,10 +33,10 @@ DEFAULT_SETTINGS = dict(
     MIN_PASSWORD_LENGTH=6,
     PERMANENT_SESSION_LIFETIME=7 * 24 * 60 * 60,  # seconds; 1 week
     DEFAULT_QUOTA=100000000,
-    ADMIN_USERNAME=None,
+    MARKDOWN_URL="https://www.markdownguide.org/basic-syntax/",
+    ADMIN_USERNAME=None,        # Admin user to create at startup, if not exists.
     ADMIN_EMAIL=None,
     ADMIN_PASSWORD=None,
-    MARKDOWN_URL="https://www.markdownguide.org/basic-syntax/",
 )
 
 

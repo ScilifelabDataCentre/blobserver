@@ -1,10 +1,10 @@
-"Web app template based on Flask and Sqlite3. With user account handling."
+"blobserver: Web app to upload and serve blobs (files)."
 
 import re
 import os.path
 import sys
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 
 class Constants:
