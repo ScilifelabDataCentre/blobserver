@@ -371,9 +371,10 @@ class UserSaver(utils.BaseSaver):
 # Utility functions
 
 
-def create_admin_user():
+def create_first_admin():
     """Check if an admin user is specified by settings.
     If it is, and it has not been created, create it.
+    Called by 'app' before first request.
     """
     flask.g.db = utils.get_db()
     config = flask.current_app.config
