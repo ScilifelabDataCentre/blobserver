@@ -1,4 +1,4 @@
-"Web app to upload and serve blobs (files)."
+"blobserver: Web app to upload and serve blobs (files)."
 
 import flask
 from flask_cors import CORS
