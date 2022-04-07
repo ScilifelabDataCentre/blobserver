@@ -37,6 +37,7 @@ DEFAULT_SETTINGS = dict(
     ADMIN_USERNAME=None,        # Admin user to create at startup, if not exists.
     ADMIN_EMAIL=None,
     ADMIN_PASSWORD=None,
+    REVERSE_PROXY=False,
 )
 
 
