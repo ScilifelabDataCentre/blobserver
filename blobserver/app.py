@@ -3,6 +3,7 @@
 import flask
 from flask_cors import CORS
 import jinja2.utils
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import blobserver.about
 import blobserver.config
@@ -27,6 +28,8 @@ utils.init(app)
 blobserver.user.init(app)
 blobserver.blob.init(app)
 
+if app.config["REVERSE_PROXY"]:
+    app.wsgi_app = ProxyFix(app.wsgi_app)
 
 @app.context_processor
 def setup_template_context():
