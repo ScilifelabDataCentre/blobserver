@@ -1,4 +1,4 @@
-"""Test browser user access.
+"""Test browser user access and blob handling.
 
 After installing from PyPi using the 'requirements.txt' file, one must do:
 $ playwright install
