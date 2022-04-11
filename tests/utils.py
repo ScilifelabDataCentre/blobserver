@@ -3,7 +3,7 @@
 import http.client
 import json
 
-BLOBSERVER_VERSION = "1.1.0"
+BLOBSERVER_VERSION = "1.1.1"
 
 
 def get_settings(**defaults):

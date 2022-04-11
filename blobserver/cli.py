@@ -1,13 +1,12 @@
-"Command-line interface."
+"Command-line interface to the blobserver instance."
 
-import argparse
-import getpass
+import csv
 import io
 import os
-import sys
 import tarfile
 import time
 
+import click
 import flask
 
 import blobserver.app
@@ -17,57 +16,100 @@ from blobserver import constants
 from blobserver import utils
 
 
-def get_parser():
-    "Get the parser for the command line interface."
-    p = argparse.ArgumentParser(
-        prog="cli.py",
-        usage="python %(prog)s [options]",
-        description="blobserver command line interface",
-    )
-    p.add_argument("-d", "--debug", action="store_true", help="Debug logging output.")
-    x0 = p.add_mutually_exclusive_group()
-    x0.add_argument(
-        "-A", "--create_admin", action="store_true", help="Create an admin user."
-    )
-    x0.add_argument("-U", "--create_user", action="store_true", help="Create a user.")
-    x0.add_argument(
-        "-D",
-        "--dump",
-        action="store",
-        metavar="FILENAME",
-        nargs="?",
-        const=True,
-        help="Dump all data into a tar.gz file.",
-    )
-    return p
+@click.group()
+def cli():
+    "Command-line interface to the blobserver instance."
+    pass
 
 
-def execute(pargs):
-    "Execute the command."
-    if pargs.debug:
-        flask.current_app.config["DEBUG"] = True
-        flask.current_app.config["LOGFORMAT"] = "%(levelname)-10s %(message)s"
-    if pargs.create_admin:
-        with blobserver.user.UserSaver() as saver:
-            saver.set_username(input("username > "))
-            saver.set_email(input("email > "))
-            saver.set_password(getpass.getpass("password > "))
-            saver.set_role(constants.ADMIN)
-            saver.set_status(constants.ENABLED)
-            saver["accesskey"] = None
-    elif pargs.create_user:
-        with blobserver.user.UserSaver() as saver:
-            saver.set_username(input("username > "))
-            saver.set_email(input("email > "))
-            saver.set_password(getpass.getpass("password > "))
-            saver.set_role(constants.USER)
-            saver.set_status(constants.ENABLED)
-            saver["accesskey"] = None
-    elif pargs.dump:
-        if pargs.dump == True:
-            tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
+@cli.command()
+@click.option("--username", help="Username for the new admin account.", prompt=True)
+@click.option("--email", help="Email address for the new admin account.", prompt=True)
+@click.option(
+    "--password",
+    help="Password for the new admin account.",
+    prompt=True,
+    hide_input=True,
+)
+def create_admin(username, email, password):
+    "Create a new admin account."
+    with blobserver.app.app.app_context():
+        flask.g.db = utils.get_db()
+        try:
+            with blobserver.user.UserSaver() as saver:
+                saver.set_username(username)
+                saver.set_email(email)
+                saver.set_password(password)
+                saver.set_role(constants.ADMIN)
+                saver.set_status(constants.ENABLED)
+                saver.set_accesskey()
+        except ValueError as error:
+            raise click.ClickException(str(error))
+
+
+@cli.command()
+@click.option("--username", help="Username for the new user account.", prompt=True)
+@click.option("--email", help="Email address for the new user account.", prompt=True)
+@click.option(
+    "--password",
+    help="Password for the new user account.",
+    prompt=True,
+    hide_input=True,
+)
+def create_user(username, email, password):
+    "Create a new user account."
+    with blobserver.app.app.app_context():
+        flask.g.db = utils.get_db()
+        try:
+            with blobserver.user.UserSaver() as saver:
+                saver.set_username(username)
+                saver.set_email(email)
+                saver.set_password(password)
+                saver.set_role(constants.USER)
+                saver.set_status(constants.ENABLED)
+                saver.set_accesskey()
+        except ValueError as error:
+            raise click.ClickException(str(error))
+
+
+@cli.command()
+@click.option("--username", help="Username for the user account.", prompt=True)
+@click.option(
+    "--password",
+    help="New password for the user account.",
+    prompt=True,
+    hide_input=True,
+)
+def password(username, password):
+    "Set the password for a user account."
+    with blobserver.app.app.app_context():
+        flask.g.db = utils.get_db()
+        user = blobserver.user.get_user(username=username)
+        if user:
+            with dbshare.user.UserSaver(user) as saver:
+                saver.set_password(password)
         else:
-            tarname = pargs.dump
+            raise click.ClickException("No such user.")
+
+
+@cli.command()
+def users():
+    "Output a CSV list of the user accounts."
+    with blobserver.app.app.app_context():
+        flask.g.db = utils.get_db()
+        with io.StringIO() as outfile:
+            writer = csv.writer(outfile)
+            writer.writerow(["username", "email", "role", "status"])
+            for user in blobserver.user.get_users():
+                writer.writerow([user["username"], user["email"], user["role"], user["status"]])
+            click.echo(outfile.getvalue())
+
+@cli.command()
+@click.option("--tarname", help="Name of the dump tar file.")
+def dump(tarname):
+    with blobserver.app.app.app_context():
+        if not tarname:
+            tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
         if tarname.endswith(".gz"):
             mode = "w:gz"
         else:
@@ -85,19 +127,17 @@ def execute(pargs):
             count += 1
             size += len(data)
         outfile.close()
-        print(f"Wrote {count} files, {size} bytes to {tarname}")
+        click.echo(f"Wrote {count} files, {size} bytes to {tarname}")
 
 
-def main():
-    "Entry point for command line interface."
-    parser = get_parser()
-    pargs = parser.parse_args()
-    if len(sys.argv) == 1:
-        parser.print_usage()
+@cli.command()
+@click.argument("input_tarfile", type=click.File("rb"))
+def undump(input_tarfile):
     with blobserver.app.app.app_context():
-        flask.g.db = utils.get_db()
-        execute(pargs)
+        # XXX check if data already exists; bail
+        # How to replace the newly created db file?
+        click.echo(f"undumping")
 
 
 if __name__ == "__main__":
-    main()
+    cli()
