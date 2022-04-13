@@ -3,6 +3,7 @@
 import csv
 import io
 import os
+import os.path
 import tarfile
 import time
 
@@ -101,8 +102,11 @@ def users():
             writer = csv.writer(outfile)
             writer.writerow(["username", "email", "role", "status"])
             for user in blobserver.user.get_users():
-                writer.writerow([user["username"], user["email"], user["role"], user["status"]])
+                writer.writerow(
+                    [user["username"], user["email"], user["role"], user["status"]]
+                )
             click.echo(outfile.getvalue())
+
 
 @cli.command()
 @click.option("--tarname", help="Name of the dump tar file.")
@@ -134,9 +138,32 @@ def dump(tarname):
 @click.argument("input_tarfile", type=click.File("rb"))
 def undump(input_tarfile):
     with blobserver.app.app.app_context():
-        # XXX check if data already exists; bail
-        # How to replace the newly created db file?
-        click.echo(f"undumping")
+        # This unfortunately creates an empty master Sqlite3 file.
+        flask.g.db = utils.get_db()
+        if blobserver.user.get_users():
+            raise click.ClickException("Cannot undump to a non-empty database.")
+        with tarfile.open(fileobj=input_tarfile) as infile:
+            # Check that the master Sqlite3 file exists.
+            for item in infile:
+                if item.name == flask.current_app.config["SQLITE3_FILENAME"]:
+                    # Remove the just-created master Sqlite3 file.
+                    flask.g.db.close()
+                    os.remove(flask.current_app.config["SQLITE3_FILEPATH"])
+                    break
+            else:
+                raise click.ClickException("No Sqlite3 master file in the dump file.")
+            nitems = 0
+            for item in infile:
+                itemfile = infile.extractfile(item)
+                itemdata = itemfile.read()
+                itemfile.close()
+                filepath = os.path.join(
+                    flask.current_app.config["STORAGE_DIRPATH"], item.name
+                )
+                with open(filepath, "wb") as outfile:
+                    outfile.write(itemdata)
+                nitems += 1
+        click.echo(f"{nitems} files in dump file.")
 
 
 if __name__ == "__main__":
