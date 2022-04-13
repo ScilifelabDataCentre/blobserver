@@ -31,6 +31,7 @@ blobserver.blob.init(app)
 if app.config["REVERSE_PROXY"]:
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
+
 @app.context_processor
 def setup_template_context():
     "Add useful stuff to the global context of Jinja2 templates."

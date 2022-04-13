@@ -11,6 +11,7 @@ from blobserver import utils
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
     SERVER_NAME="localhost:5009",  # For URL generation; app.run() in devel.
+    REVERSE_PROXY=False,
     SITE_NAME="blobserver",
     SITE_ICON=None,  # Name of file in '../site' directory
     SITE_LOGO=None,  # Name of file in '../site' directory
@@ -34,10 +35,9 @@ DEFAULT_SETTINGS = dict(
     PERMANENT_SESSION_LIFETIME=7 * 24 * 60 * 60,  # seconds; 1 week
     DEFAULT_QUOTA=100000000,
     MARKDOWN_URL="https://www.markdownguide.org/basic-syntax/",
-    ADMIN_USERNAME=None,        # Admin user to create at startup, if not exists.
+    ADMIN_USERNAME=None,  # Admin user to create at startup, if not exists.
     ADMIN_EMAIL=None,
     ADMIN_PASSWORD=None,
-    REVERSE_PROXY=False,
 )
 
 
@@ -99,9 +99,9 @@ def init(app):
     if not app.config["STORAGE_DIRPATH"]:
         raise ValueError("STORAGE_DIRPATH has not been set")
     if not app.config["SQLITE3_FILENAME"]:
-        raise ValueError("SQLITE3_FILEPATH has not been set")
+        raise ValueError("SQLITE3_FILENAME has not been set")
     if not app.config["SQLITE3_FILENAME"].startswith("_"):
-        raise ValueError("SQLITE3_FILEPATH must begin with underscore '_'")
+        raise ValueError("SQLITE3_FILENAME must begin with underscore '_'")
 
     # Record dirpaths for access in app.
     app.config["ROOT"] = constants.ROOT
