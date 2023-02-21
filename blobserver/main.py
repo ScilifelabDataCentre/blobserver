@@ -2,7 +2,7 @@
 
 import flask
 from flask_cors import CORS
-import jinja2.utils
+import markupsafe
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import blobserver.about
@@ -42,12 +42,6 @@ def setup_template_context():
     )
 
 
-@app.before_first_request
-def initialize():
-    "Initialization before handling first request."
-    blobserver.user.create_first_admin()
-
-
 @app.before_request
 def prepare():
     "Open the database connection; get the current user."
@@ -84,7 +78,7 @@ def debug():
     for key, value in sorted(flask.request.environ.items()):
         result.append(f"<tr><td>{key}</td><td>{value}</td></tr>")
     result.append("</table>")
-    return jinja2.utils.Markup("\n".join(result))
+    return markupsafe.Markup("\n".join(result))
 
 
 @app.route("/status")

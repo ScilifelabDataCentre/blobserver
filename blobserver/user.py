@@ -371,35 +371,6 @@ class UserSaver(utils.BaseSaver):
 # Utility functions
 
 
-def create_first_admin():
-    """Check if an admin user is specified by settings.
-    If it is, and it has not been created, create it.
-    Called by 'app' before first request.
-    """
-    flask.g.db = utils.get_db()
-    config = flask.current_app.config
-    if not (
-        config["ADMIN_USERNAME"] and config["ADMIN_EMAIL"] and config["ADMIN_PASSWORD"]
-    ):
-        utils.get_logger().info("ADMIN account not specified in settings.")
-        return
-    if get_user(username=config["ADMIN_USERNAME"]):
-        utils.get_logger().info(
-            f"Admin user '{config['ADMIN_USERNAME']}'" " exists already."
-        )
-        return
-    try:
-        with UserSaver() as saver:
-            saver.set_username(config["ADMIN_USERNAME"])
-            saver.set_email(config["ADMIN_EMAIL"])
-            saver.set_password(config["ADMIN_PASSWORD"])
-            saver.set_role(constants.ADMIN)
-            saver.set_status(constants.ENABLED)
-        utils.get_logger().info(f"Admin user '{config['ADMIN_USERNAME']}' created.")
-    except ValueError as error:
-        utils.get_logger().error("Could not create admin user; misconfiguration.")
-
-
 def get_user(username=None, email=None, accesskey=None):
     """Return the user for the given username, email or accesskey.
     Return None if no such user.
