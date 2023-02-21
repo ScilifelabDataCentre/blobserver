@@ -10,7 +10,7 @@ import time
 import click
 import flask
 
-import blobserver.app
+import blobserver.main
 import blobserver.user
 
 from blobserver import constants
@@ -34,7 +34,7 @@ def cli():
 )
 def create_admin(username, email, password):
     "Create a new admin account."
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         flask.g.db = utils.get_db()
         try:
             with blobserver.user.UserSaver() as saver:
@@ -59,7 +59,7 @@ def create_admin(username, email, password):
 )
 def create_user(username, email, password):
     "Create a new user account."
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         flask.g.db = utils.get_db()
         try:
             with blobserver.user.UserSaver() as saver:
@@ -83,7 +83,7 @@ def create_user(username, email, password):
 )
 def password(username, password):
     "Set the password for a user account."
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         flask.g.db = utils.get_db()
         user = blobserver.user.get_user(username=username)
         if user:
@@ -96,7 +96,7 @@ def password(username, password):
 @cli.command()
 def users():
     "Output a CSV list of the user accounts."
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         flask.g.db = utils.get_db()
         with io.StringIO() as outfile:
             writer = csv.writer(outfile)
@@ -111,7 +111,7 @@ def users():
 @cli.command()
 @click.option("--tarname", help="Name of the dump tar file.")
 def dump(tarname):
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         if not tarname:
             tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
         if tarname.endswith(".gz"):
@@ -137,7 +137,7 @@ def dump(tarname):
 @cli.command()
 @click.argument("input_tarfile", type=click.File("rb"))
 def undump(input_tarfile):
-    with blobserver.app.app.app_context():
+    with blobserver.main.app.app_context():
         # This unfortunately creates an empty master Sqlite3 file.
         flask.g.db = utils.get_db()
         if blobserver.user.get_users():

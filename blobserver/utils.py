@@ -14,8 +14,8 @@ import time
 import uuid
 
 import flask
-import jinja2.utils
 import marko
+import markupsafe
 import werkzeug.routing
 
 from blobserver import constants
@@ -227,7 +227,7 @@ def csrf_token():
         '<input type="hidden" name="_csrf_token" value="%s">'
         % flask.session["_csrf_token"]
     )
-    return jinja2.utils.Markup(html)
+    return markupsafe.Markup(html)
 
 
 def check_csrf_token():
@@ -269,7 +269,7 @@ def get_md_parser():
 def markdown(text):
     "Template filter to process the text using Marko markdown."
     text = html.escape(text or "", quote=False)
-    return jinja2.utils.Markup(get_md_parser().convert(text))
+    return markupsafe.Markup(get_md_parser().convert(text))
 
 
 def user_link(user):
@@ -281,7 +281,7 @@ def user_link(user):
 
     if am_admin_or_self(user):
         url = flask.url_for("user.display", username=user["username"])
-        return jinja2.utils.Markup(f'<a href="{url}">{user["username"]}</a>')
+        return markupsafe.Markup(f'<a href="{url}">{user["username"]}</a>')
     else:
         return user["username"]
 
