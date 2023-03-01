@@ -419,20 +419,6 @@ def get_users(role=None, status=None):
     return users
 
 
-def get_current_user():
-    """Return the user for the current session.
-    Return None if no such user, or disabled.
-    """
-    user = get_user(
-        username=flask.session.get("username"),
-        accesskey=flask.request.headers.get("x-accesskey"),
-    )
-    if user is None or user["status"] != constants.ENABLED:
-        flask.session.pop("username", None)
-        return None
-    return user
-
-
 def do_login(username, password):
     """Set the session cookie if successful login.
     Raise ValueError if some problem.

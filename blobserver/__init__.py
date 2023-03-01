@@ -4,7 +4,7 @@ import re
 import os.path
 import sys
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 
 class Constants:
@@ -66,6 +66,8 @@ class Constants:
     CLIPBOARD_VERSION = "2.0.6"
     CLIPBOARD_FILENAME = "clipboard.min.js"
 
+    MARKDOWN_URL = "https://www.markdownguide.org/basic-syntax/"
+
     ID_RX = re.compile(r"^[a-z][a-z0-9_-]*$", re.I)
     IUID_RX = re.compile(r"^[a-f0-9]{32,32}$", re.I)
     EMAIL_RX = re.compile(r"^[a-z0-9_.+-]+@[a-z0-9-]+\.[a-z0-9-.]+$")
@@ -80,5 +82,7 @@ class Constants:
     DISABLED = "disabled"
     USER_STATUSES = [ENABLED, DISABLED]
 
+    # Directory database file. Must start with underscore.
+    SQLITE3_FILENAME = "_data.sqlite3"
 
 constants = Constants()

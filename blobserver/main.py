@@ -46,11 +46,21 @@ def setup_template_context():
 def prepare():
     "Open the database connection; get the current user."
     flask.g.db = utils.get_db()
-    flask.g.current_user = blobserver.user.get_current_user()
-    if flask.g.current_user:
-        flask.g.am_admin = flask.g.current_user["role"] == constants.ADMIN
-    else:
+    user = blobserver.user.get_user(
+        username=flask.session.get("username"),
+        accesskey=flask.request.headers.get("x-accesskey"),
+    )
+    if user is None:
+        flask.session.pop("username", None)
+        flask.g.current_user = None
         flask.g.am_admin = False
+    elif user["status"] != constants.ENABLED:
+        flask.session.pop("username", None)
+        flask.g.current_user = None
+        flask.g.am_admin = False
+    else:
+        flask.g.current_user = user
+        flask.g.am_admin = user["role"] == constants.ADMIN
 
 
 app.after_request(utils.log_access)

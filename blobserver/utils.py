@@ -10,7 +10,6 @@ import logging
 import os.path
 import sqlite3
 import sys
-import time
 import uuid
 
 import flask
@@ -134,22 +133,6 @@ class IuidConverter(werkzeug.routing.BaseConverter):
         return value.lower()  # Case-insensitive
 
 
-class Timer:
-    "CPU timer."
-
-    def __init__(self):
-        self.start = time.process_time()
-
-    def __call__(self):
-        "Return CPU time (in seconds) since start of this timer."
-        return time.process_time() - self.start
-
-    @property
-    def milliseconds(self):
-        "Return CPU time (in milliseconds) since start of this timer."
-        return round(1000 * self())
-
-
 def get_iuid():
     "Return a new IUID, which is a UUID4 pseudo-random string."
     return uuid.uuid4().hex
@@ -172,11 +155,6 @@ def get_time(offset=None):
         instant += datetime.timedelta(seconds=offset)
     instant = instant.isoformat()
     return instant[:17] + "{:06.3f}".format(float(instant[17:])) + "Z"
-
-
-def url_for(endpoint, **values):
-    "Same as 'flask.url_for', but with '_external' set to True."
-    return flask.url_for(endpoint, _external=True, **values)
 
 
 def http_GET():
@@ -242,34 +220,21 @@ def error(message, url=None):
     """ "Return redirect response to the given URL, or referrer, or home page.
     Flash the given message.
     """
-    flash_error(message)
-    return flask.redirect(url or referrer_or_home())
+    flask.flash(str(message), "error")
+    return flask.redirect(url or 
+                          flask.request.headers.get("referer") or
+                          flask.url_for("home"))
 
 
-def referrer_or_home():
-    "Return the URL for the referring page 'referer' or the home page."
-    return flask.request.headers.get("referer") or flask.url_for("home")
-
-
-def flash_error(msg):
-    "Flash error message."
-    flask.flash(str(msg), "error")
-
-
-def flash_message(msg):
+def flash_message(message):
     "Flash information message."
-    flask.flash(str(msg), "message")
-
-
-def get_md_parser():
-    "Get the Markdown parser for HTML. Allows for future extensions."
-    return marko.Markdown()
+    flask.flash(str(message), "message")
 
 
 def markdown(text):
     "Template filter to process the text using Marko markdown."
     text = html.escape(text or "", quote=False)
-    return markupsafe.Markup(get_md_parser().convert(text))
+    return markupsafe.Markup(marko.Markdown().convert(text))
 
 
 def user_link(user):

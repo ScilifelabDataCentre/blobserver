@@ -20,8 +20,6 @@ DEFAULT_SETTINGS = dict(
     LOG_FILEPATH=None,
     LOG_ROTATING=0,  # Number of backup rotated log files, if any.
     LOG_FORMAT="%(levelname)-10s %(asctime)s %(message)s",
-    JSON_AS_ASCII=False,
-    JSON_SORT_KEYS=False,
     HOST_LOGO=None,  # Name of file in '../site' directory
     HOST_NAME=None,
     HOST_URL=None,
@@ -29,12 +27,10 @@ DEFAULT_SETTINGS = dict(
     SECRET_KEY=None,  # Must be set in 'settings.json'
     SALT_LENGTH=12,
     STORAGE_DIRPATH=None,  # Must be set in 'settings.json'
-    SQLITE3_FILENAME="_data.sqlite3",  # Must start with underscore.
     MOST_RECENT=40,
     MIN_PASSWORD_LENGTH=6,
     PERMANENT_SESSION_LIFETIME=7 * 24 * 60 * 60,  # seconds; 1 week
     DEFAULT_QUOTA=100000000,
-    MARKDOWN_URL="https://www.markdownguide.org/basic-syntax/"
 )
 
 
@@ -86,6 +82,10 @@ def init(app):
         path = os.path.abspath(path)
         app.config[key] = path
 
+    # Force some hard-wired settings.
+    app.config["JSON_AS_ASCII"] = False
+    app.config["JSON_SORT_KEYS"] = False
+
     # Sanity check; should not execute if this fails.
     if not app.config["SECRET_KEY"]:
         raise ValueError("SECRET_KEY must be set")
@@ -95,10 +95,6 @@ def init(app):
         raise ValueError("MIN_PASSWORD_LENGTH must be more than 4 characters")
     if not app.config["STORAGE_DIRPATH"]:
         raise ValueError("STORAGE_DIRPATH has not been set")
-    if not app.config["SQLITE3_FILENAME"]:
-        raise ValueError("SQLITE3_FILENAME has not been set")
-    if not app.config["SQLITE3_FILENAME"].startswith("_"):
-        raise ValueError("SQLITE3_FILENAME must begin with underscore '_'")
 
     # Record dirpaths for access in app.
     app.config["ROOT"] = constants.ROOT
@@ -106,8 +102,7 @@ def init(app):
     app.config["SITE_STATIC"] = os.path.join(constants.SITE, "static")
 
     # Set the filepath for the Sqlite3 database.
-    # Will always be in the storage directory,
-    # but is protected by the beginning underscore.
+    # Is located in the storage directory, but is protected by the beginning underscore.
     app.config["SQLITE3_FILEPATH"] = os.path.join(
-        app.config["STORAGE_DIRPATH"], app.config["SQLITE3_FILENAME"]
+        app.config["STORAGE_DIRPATH"], constants.SQLITE3_FILENAME
     )

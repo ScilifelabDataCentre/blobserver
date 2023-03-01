@@ -60,8 +60,9 @@
 <script>
   $(function() {
     $("#users").DataTable( {
-      "pagingType": "full_numbers",
-      "pageLength": 25
+      pagingType: "full_numbers",
+      pageLength: 25,
+      order: [[7, "desc"]]
     });
   });
 </script>
