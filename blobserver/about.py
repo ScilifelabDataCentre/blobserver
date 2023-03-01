@@ -6,6 +6,7 @@ import flask
 import jinja2
 import marko
 
+import blobserver.config
 from blobserver import constants
 from blobserver import utils
 
@@ -48,7 +49,10 @@ def contact():
 @blueprint.route("/settings")
 @utils.admin_required
 def settings():
-    config = flask.current_app.config.copy()
+    "Display the modifiable settings."
+    config = {}
+    for key in blobserver.config.DEFAULT_SETTINGS:
+        config[key] = flask.current_app.config[key]
     for key in ["SECRET_KEY", "MAIL_PASSWORD"]:
         if config.get(key):
             config[key] = "<hidden>"
