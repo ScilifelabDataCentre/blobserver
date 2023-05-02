@@ -1,7 +1,7 @@
 "blobserver: Web app to upload and serve blobs (files)."
 
 import flask
-from flask_cors import CORS
+import flask_cors
 import markupsafe
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -16,7 +16,7 @@ from blobserver import utils
 
 app = flask.Flask(__name__)
 
-CORS(app, supports_credentials=True)
+flask_cors.CORS(app, supports_credentials=True)
 
 # Add URL map converters.
 app.url_map.converters["identifier"] = utils.IdentifierConverter

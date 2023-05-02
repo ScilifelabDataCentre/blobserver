@@ -111,6 +111,7 @@ def users():
 @cli.command()
 @click.option("--tarname", help="Name of the dump tar file.")
 def dump(tarname):
+    "Dump the database and all files to a '.tar.gz' dump file."
     with blobserver.main.app.app_context():
         if not tarname:
             tarname = "dump_{}.tar.gz".format(time.strftime("%Y-%m-%d"))
@@ -137,6 +138,7 @@ def dump(tarname):
 @cli.command()
 @click.argument("input_tarfile", type=click.File("rb"))
 def undump(input_tarfile):
+    "Load a '.tar.gz' dump file; database and all files."
     with blobserver.main.app.app_context():
         # This unfortunately creates an empty master Sqlite3 file.
         flask.g.db = utils.get_db()
