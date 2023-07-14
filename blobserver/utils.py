@@ -53,7 +53,7 @@ def get_logger(app=None):
             app = flask.current_app
         config = app.config
         _logger = logging.getLogger(config["LOG_NAME"])
-        if config["LOG_DEBUG"]:
+        if config["DEBUG"]:
             _logger.setLevel(logging.DEBUG)
         else:
             _logger.setLevel(logging.WARNING)
