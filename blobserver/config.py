@@ -10,12 +10,12 @@ from blobserver import utils
 
 # Default configurable values; modified by reading a JSON file in 'init'.
 DEFAULT_SETTINGS = dict(
+    DEBUG=False,
     SERVER_NAME="localhost:5009",  # For URL generation; app.run() in devel.
     REVERSE_PROXY=False,
     SITE_NAME="blobserver",
     SITE_ICON=None,  # Name of file in '../site' directory
     SITE_LOGO=None,  # Name of file in '../site' directory
-    LOG_DEBUG=False,
     LOG_NAME="blobserver",
     LOG_FILEPATH=None,
     LOG_ROTATING=0,  # Number of backup rotated log files, if any.
