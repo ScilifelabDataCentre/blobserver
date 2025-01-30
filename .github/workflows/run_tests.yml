@@ -20,21 +20,32 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r tests/requirements.txt  # Install test dependencies
+          pip install -r ./requirements.txt # Install server dependencies
 
       - name: Install Playwright browsers
         run: |
           playwright install  # Install necessary browsers for Playwright
 
-      - name: Create settings.json
+      - name: Set PYTHONPATH
         run: |
-          echo '{
-            "BASE_URL": "http://localhost:5009",
-            "USERNAME": "testuser",
-            "ACCESSKEY": "testaccesskey",
-            "SECRET_KEY": "your-secret-key",
-            "STORAGE_DIRPATH": "/path/to/storage",
-            "SERVER_NAME": "localhost:5009"
-          }' > tests/settings.json
+          echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV  # Set PYTHONPATH to current directory
+
+      - name: Create site directory and copy settings
+        run: |
+          mkdir -p blobserver/site/static  # Create necessary directories
+          cp blobserver/example_settings.json site/settings.json  # Copy example settings
+          cp blobserver/example_settings.json tests/settings.json  # Copy example settings
+
+
+      - name: Update STORAGE_DIRPATH in settings.json
+        run: |
+          sed -i 's|/path/to/blobserver-storage|/home/runner/work/blobserver-storage|' site/settings.json
+          mkdir -p /home/runner/work/blobserver-storage  # Create storage directory
+
+      - name: Start application server
+        run: |
+          nohup python blobserver/main.py &  # Start your application server
+          sleep 5  # Wait for the server to start
 
       - name: Run tests
         run: |
