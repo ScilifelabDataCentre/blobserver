@@ -21,6 +21,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r tests/requirements.txt  # Install test dependencies
 
+      - name: Create settings.json
+        run: |
+          echo '{
+            "BASE_URL": "http://localhost:5009",
+            "USERNAME": "testuser",
+            "ACCESSKEY": "testaccesskey",
+            "SECRET_KEY": "your-secret-key",
+            "STORAGE_DIRPATH": "/path/to/storage",
+            "SERVER_NAME": "localhost:5009"
+          }' > tests/settings.json
+
       - name: Install Playwright browsers
         run: |
           playwright install  # Install necessary browsers for Playwright
