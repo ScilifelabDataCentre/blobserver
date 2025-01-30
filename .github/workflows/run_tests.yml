@@ -36,6 +36,11 @@ jobs:
         run: |
           playwright install  # Install necessary browsers for Playwright
 
+      - name: Start server
+        run: |
+          nohup python -m http.server 5009 &  # Start a simple HTTP server in the background
+          sleep 5  # Wait for the server to start
+
       - name: Run tests
         run: |
           pytest tests/test_browser_anonymous.py  # Run only the specified test file 
