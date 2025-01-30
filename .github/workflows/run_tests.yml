@@ -32,7 +32,7 @@ jobs:
 
       - name: Create site directory and copy settings
         run: |
-          mkdir -p blobserver/site/static  # Create necessary directories
+          mkdir -p ./site/static  # Create necessary directories
           cp blobserver/example_settings.json site/settings.json  # Copy example settings
           cp blobserver/example_settings.json tests/settings.json  # Copy example settings
 
