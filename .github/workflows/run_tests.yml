@@ -25,6 +25,17 @@ jobs:
         run: |
           playwright install  # Install necessary browsers for Playwright
 
+      - name: Create settings.json
+        run: |
+          echo '{
+            "BASE_URL": "http://localhost:5009",
+            "USERNAME": "testuser",
+            "ACCESSKEY": "testaccesskey",
+            "SECRET_KEY": "your-secret-key",
+            "STORAGE_DIRPATH": "/path/to/storage",
+            "SERVER_NAME": "localhost:5009"
+          }' > tests/settings.json
+
       - name: Run tests
         run: |
           pytest tests/test_browser_anonymous.py  # Run only the specified test file 
