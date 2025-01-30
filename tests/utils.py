@@ -2,6 +2,7 @@
 
 import http.client
 import json
+import os
 
 BLOBSERVER_VERSION = "1.1.1"
 
@@ -9,7 +10,8 @@ BLOBSERVER_VERSION = "1.1.1"
 def get_settings(**defaults):
     "Update the default settings by the contents of the 'settings.json' file."
     result = defaults.copy()
-    with open("settings.json", "rb") as infile:
+    settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+    with open(settings_path, "rb") as infile:
         data = json.load(infile)
     for key in result:
         try:
