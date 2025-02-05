@@ -1,5 +1,15 @@
 # blobserver
+---
 
+<div align="center">
+
+🚨 **Important Notice** 🚨
+
+> **We are currently evaluating the future of the Blob Server project and do not intend for it to be used as a dependency by other teams. Please refrain from integrating Blob Server into new projects or systems. We will communicate any changes to this status through appropriate channels.**
+
+</div>
+
+---
 Simple web app to server blobs (files containing any data) publicly. A
 file can be uploaded or updated by an authorized account, either via
 the web interface or via a script.
