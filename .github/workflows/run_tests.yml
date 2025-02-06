@@ -36,6 +36,7 @@ jobs:
           mkdir -p ./site/static  # Create necessary directories
           cp blobserver/example_settings.json site/settings.json  # Copy example settings
           cp blobserver/example_settings.json tests/settings.json  # Copy example settings
+          cat tests/settings.json
 
 
       - name: Update STORAGE_DIRPATH in settings.json
@@ -47,6 +48,10 @@ jobs:
         run: |
           nohup python blobserver/main.py &  # Start your application server
           sleep 5  # Wait for the server to start
+
+      - name: Create test user
+        run: |
+          python blobserver/cli.py create-user --username test1 --password test12345 --email test@test.com  # Create a test user
 
       - name: Run tests
         run: |

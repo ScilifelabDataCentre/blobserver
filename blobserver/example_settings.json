@@ -14,6 +14,6 @@
   "ADMIN_EMAIL": "datacentre@scilifelabas.se",
   "ADMIN_PASSWORD": "change-this-after-creation",
   "USERNAME": "test",
-  "ACCESSKEY": "207aa05cc80e4c1588622f071cc093c8",
-  "PASSWORD": "test12345"
+  "PASSWORD": "test12345",
+  "USEREMAIL": "test@test.com"
 }
