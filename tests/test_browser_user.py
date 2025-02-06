@@ -58,37 +58,71 @@ def test_user_page(settings, page):
 def test_user_blobs(settings, page):
     "List the user's blobs, create, get, update and delete one."
     login_user(settings, page)
-
+    # href_value = page.locator('a.btn.btn-outline-secondary').get_attribute('href')
+    # print(f"The href value is: {href_value}")
     # Check number of blobs owned by the user.
-    page.click("text=My blobs")
-    assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
+
+    print("Before clicking 'My blobs'")
+    print(f"Current URL: {page.url}")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
+
+    print("After clicking 'My blobs'")
+    print(f"Current URL2: {page.url}")
+    expected_url = f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
+    print(f"Expected URL: {expected_url}")
+    print(f"Actual URL: {page.url}")
+
+    # Use rstrip('/') to handle trailing slashes
+    assert page.url.rstrip('/') == expected_url.rstrip('/'), f"URL mismatch: {page.url} != {expected_url}"
+
     locator = page.locator(".blobserver-blobinfo > a")
     count = locator.count()
 
     # Check that blob does not exist. No authentication required.
     filename = os.path.basename(__file__)
+    print(f"filename1: {filename}")
     url = f"{settings['BASE_URL']}/blob/{filename}"
     response = requests.get(url)
     assert response.status_code == http.client.NOT_FOUND
 
     # Create a new blob.
-    page.click("text=My blobs")
+    # page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
+
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     page.click("#upload")
     assert page.url == f"{settings['BASE_URL']}/blob/"
     page.click('textarea[name="description"]')
     description = "test upload"
     page.fill('textarea[name="description"]', description)
+
+     # Find a .txt file in the current working directory
+    txt_files = [f for f in os.listdir(os.getcwd()) if f.endswith('.txt')]
+    if not txt_files:
+        raise FileNotFoundError("No .txt file found in the current working directory.")
+    
+    filename = txt_files[0]  # Choose the first .txt file found
+    print(f"Selected file for upload: {filename}")
+
     with page.expect_file_chooser() as fc_info:
         page.click('input[name="file"]')
+
     file_chooser = fc_info.value
     file_chooser.set_files(filename)
+    print("After setting files")
+    
+    # print(f"filename: {filename}")
+    # file_chooser = fc_info.value
+    # file_chooser.set_files(filename)
+    # print("After setting files")
+
     page.click('button:has-text("Upload")')
     assert page.url == f"{settings['BASE_URL']}/blob/{filename}/info"
     assert page.locator("#description").inner_text() == description
 
     # Check increase in number of blobs.
-    page.click("text=My blobs")
+    # page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     locator = page.locator(".blobserver-blobinfo > a")
     assert locator.count() == count + 1
@@ -97,7 +131,7 @@ def test_user_blobs(settings, page):
     url = f"{settings['BASE_URL']}/blob/{filename}"
     response = requests.get(url)
     assert response.status_code == http.client.OK
-    with open(__file__, "rb") as infile:
+    with open(filename, "rb") as infile:
         data = infile.read()
     assert response.content == data
 
@@ -120,7 +154,8 @@ def test_user_blobs(settings, page):
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
 
     # Check same number of blobs as before.
-    page.click("text=My blobs")
+    # page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     locator = page.locator(".blobserver-blobinfo > a")
     assert locator.count() == count

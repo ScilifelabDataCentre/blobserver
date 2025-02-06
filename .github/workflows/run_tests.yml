@@ -2,6 +2,7 @@ name: Run Tests
 
 on:
   pull_request:
+  push:
 
 jobs:
   test:
@@ -49,4 +50,4 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/test_browser_anonymous.py  # Run only the specified test file 
+          pytest tests  # Run only the specified test file 

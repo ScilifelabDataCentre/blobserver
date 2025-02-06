@@ -1,82 +1,60 @@
-# blobserver
+# Blobserver Onboarding Document
 
----
+## Introduction
 
-🚨 **Important Notice** 🚨
+This document outlines the key tasks for onboarding the `blobserver` project, focusing on reviewing the Docker container version, defining aims for dependency updates, and identifying gaps in automated testing.
 
-> **We are currently evaluating the future of the Blob Server project and do not intend for it to be used as a dependency by other teams. Please refrain from integrating Blob Server into new projects or systems. We will communicate any changes to this status through appropriate channels.**
+## Task 1: Review the Docker Container Version
 
----
+### Current Python Version
 
-Simple web app to server blobs (files containing any data) publicly. A
-file can be uploaded or updated by an authorized account, either via
-the web interface or via a script.
+The `blobserver` is currently running Python version 3.11.
 
-Uses: Python3, Flask, Bootstrap 4, jQuery, DataTables, clipboard.js,
-and pytest, Playwright and requests for tests.
+### Insights and Risks
 
-## Installation
+- **Compatibility**: Python 3.11 is generally compatible with most libraries. However, some packages in `requirements.txt` and `tests/requirements.txt` may not fully support it. For example, `Werkzeug` and `Flask` are typically quick to update, but always verify compatibility with the latest Python version.
 
-1. Download the blobserver software and install in a directory
-   which is denoted symbolically here `/path/to/blobserver`
+- **Known Issues**: No major issues have been reported with Python 3.11 affecting the packages in your `requirements.txt` files. However, always check the release notes of each package for specific issues.
 
-2. Set up your Python environment (Python 3.6 or later). Add
-   the path `/path/to/blobserver` to the Python search path.
+- **Docker Base Image**: The use of `FROM python:alpine` in the Dockerfile can lead to compatibility issues with Python packages requiring system dependencies not available in Alpine Linux.
 
-3. Install the third-party modules (see `requirements.txt`).
+### Plan to Overcome Risks
 
-4. Create a directory `/path/to/blobserver/site`. This will contain
-   files specific to your installation.
+1. **Dependency Audit**: Regularly check for updates to dependencies and verify their compatibility with Python 3.11 using tools like `pipdeptree`.
 
-5. Copy the example settings file to your site directory.
-   ```
-   $ cd /path/to/blobserver
-   $ cp blobserver/example_settings.json site/settings.json
-   ```
+2. **Testing**: Implement comprehensive testing, including unit and integration tests, to catch issues arising from Python 3.11.
 
-6. If you wish to use a logo image file for your site, create
-   a directory `/path/to/blobserver/site/static` and put it there.
+3. **Monitoring**: Set up monitoring to quickly detect and address runtime issues related to Python 3.11.
 
-7. The Sqlite3 database file and all the blob files must be stored
-   in a directory to which the web server can create, read and write files.
-   The name of this directory must be specified as STORAGE_DIRPATH in
-   the settings file.
+4. **Docker Base Image Update**: Consider using a more compatible base image, such as `python:3.11-slim`, to reduce compatibility issues.
 
-8. Edit the settings file. These settings can be configured using
-   environment variables, if this is more convenient.
-   - Set SECRET_KEY to a string of characters known only to you.
-     It is required.
-   - Set STORAGE_DIRPATH to the name of the directory where the
-     blob files are to be stored. See point 7 above. It is required.
-   - Set SERVER_NAME to the externally visible name of the server.
-     This is used to form the URLs of the service. It is required.
-   - Optionally set SITE_NAME to the name chosen for this service.
-   - Optionally set SITE_ICON and SITE_LOGO to the names of files which,
-     if they are defined, must be located in the
-     `/path/to/blobserver/site/static` directory. See point 4 above.
-   - Optionally set HOST_NAME and HOST_URL to fit your site.
-     The name of the logo file is set by HOST_LOGO and, if it is
-     defined, must be located in the `/path/to/blobserver/site/static`
-     directory. See point 4 above.
-   - Set CONTACT_EMAIL to an email address that handles queries about
-     the service. Optional, but should really be set.
+5. **Fallback Plan**: Maintain a stable version of the Docker container with an earlier Python version as a fallback.
 
-9. The first admin user cannot be created via the web interface. One must
-   use one of the following two methods:
+6. **Review Dependabot PRs**: Regularly review and merge pending pull requests from Dependabot to keep dependencies up-to-date. [Dependabot PRs](https://github.com/ScilifelabDataCentre/blobserver/issues?q=is%3Apr+is%3Aopen+author%3Aapp%2Fdependabot)
 
-   1. Set the variables ADMIN_USERNAME, ADMIN_EMAIL and ADMIN_PASSWORD,
-      either in the settings file, or as environment variables. If the
-      user account specified by that username has not been created already,
-      it will be created before the first request to the app is processed.
-   2. Use the command-line script `cli.py`. The option `-A` is used to
-      create an admin user account. Use the `-h` option to get help.
+## Task 2: Define Aims for Updates of Dependencies (Based on Trivy Results)
 
-10. Configure the reverse proxy (Apache, Nginx, or whatever) to serve
-    the blobserver Flask app via uWSGI. It is a very bad idea to use
-    the built-in Flask web server in production. It is **strongly**
-    suggested to expose the blobserver using **https**, i.e. encrypted.
+### Aims and Timeframes
 
-11. Once the web server is running, the first admin user account
-    can be used to create new user accounts (ordinary users, or admins).
-    Alternatively, the command-line script `cli.py` can be used
-    to do this.
+- **Critical Vulnerabilities**: Address within one week to prevent severe security breaches.
+- **High Vulnerabilities**: Resolve within two weeks to maintain application security.
+- **Medium and Low Vulnerabilities**: Address within a month to ensure overall security hygiene.
+- **Negligible and Unknown**: Review and address as part of regular maintenance cycles.
+
+## Task 3: Identify Significant Gaps in Automated Testing
+
+### Current Testing Coverage
+
+The test suite includes tests for browser user access, API user access, and anonymous access. However, there are significant gaps:
+
+1. **Security Tests**: Lack of tests for SQL injection, XSS vulnerabilities, and authentication bypass attempts.
+2. **Performance Tests**: No performance or load tests to ensure the application can handle expected traffic.
+3. **Unit Tests**: Limited unit test coverage for individual functions and methods.
+
+### Recommendations
+
+- **Expand Security Testing**: Implement tests to identify and mitigate vulnerabilities.
+- **Introduce Performance Testing**: Conduct tests to ensure the application can handle load and stress.
+- **Increase Unit Testing**: Improve coverage for utility functions and critical logic.
+
+By addressing these gaps, we can increase confidence in the codebase's stability and security, making it safer to apply updates and maintain the application.
