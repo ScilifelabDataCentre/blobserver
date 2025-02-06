@@ -53,6 +53,18 @@ jobs:
         run: |
           python blobserver/cli.py create-user --username test1 --password test12345 --email test@test.com  # Create a test user
 
+      - name: Get access key for test user
+        id: get_access_key
+        run: |
+          access_key=$(python blobserver/cli.py get-access-key --username test1)
+          echo "access_key=$access_key" >> $GITHUB_ENV
+
+      - name: Update settings.json with access key
+        run: |
+          jq --arg access_key "$access_key" '.ACCESSKEY = $access_key' tests/settings.json > tmp.json && mv tmp.json tests/settings.json
+          jq --arg access_key "$access_key" '.ACCESSKEY = $access_key' site/settings.json > tmp.json && mv tmp.json site/settings.json
+          cat tests/settings.json
+
       - name: Run tests
         run: |
           pytest tests  # Run only the specified test file 

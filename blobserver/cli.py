@@ -100,10 +100,10 @@ def users():
         flask.g.db = utils.get_db()
         with io.StringIO() as outfile:
             writer = csv.writer(outfile)
-            writer.writerow(["username", "email", "role", "status"])
+            writer.writerow(["username", "email", "role", "status", "accesskey"])
             for user in blobserver.user.get_users():
                 writer.writerow(
-                    [user["username"], user["email"], user["role"], user["status"]]
+                    [user["username"], user["email"], user["role"], user["status"], user["accesskey"]]
                 )
             click.echo(outfile.getvalue())
 
@@ -166,6 +166,19 @@ def undump(input_tarfile):
                     outfile.write(itemdata)
                 nitems += 1
         click.echo(f"{nitems} files in dump file.")
+
+
+@cli.command()
+@click.option("--username", help="Username to retrieve the access key for.", prompt=True)
+def get_access_key(username):
+    "Retrieve the access key for a given username."
+    with blobserver.main.app.app_context():
+        flask.g.db = utils.get_db()
+        user = blobserver.user.get_user(username=username)
+        if user:
+            click.echo(user["accesskey"])
+        else:
+            raise click.ClickException("No such user.")
 
 
 if __name__ == "__main__":
