@@ -9,5 +9,11 @@
   "HOST_NAME": "My site",
   "HOST_URL": "https://www.mysite.org/",
   "HOST_LOGO": "my-site.png",
-  "CONTACT_EMAIL": "my.email@your-organisation.se"
+  "CONTACT_EMAIL": "my.email@your-organisation.se",
+  "ADMIN_USERNAME": "admin",
+  "ADMIN_EMAIL": "datacentre@scilifelabas.se",
+  "ADMIN_PASSWORD": "change-this-after-creation",
+  "USERNAME": "test1",
+  "PASSWORD": "test12345",
+  "USEREMAIL": "test@test.com"
 }

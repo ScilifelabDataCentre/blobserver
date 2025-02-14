@@ -1,0 +1,70 @@
+name: Run Tests
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.16'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/requirements.txt  # Install test dependencies
+          pip install -r ./requirements.txt # Install server dependencies
+
+      - name: Install Playwright browsers
+        run: |
+          playwright install  # Install necessary browsers for Playwright
+
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV  # Set PYTHONPATH to current directory
+
+      - name: Create site directory and copy settings
+        run: |
+          mkdir -p ./site/static  # Create necessary directories
+          cp blobserver/example_settings.json site/settings.json  # Copy example settings
+          cp blobserver/example_settings.json tests/settings.json  # Copy example settings
+          cat tests/settings.json
+
+
+      - name: Update STORAGE_DIRPATH in settings.json
+        run: |
+          sed -i 's|/path/to/blobserver-storage|/home/runner/work/blobserver-storage|' site/settings.json
+          mkdir -p /home/runner/work/blobserver-storage  # Create storage directory
+
+      - name: Start application server
+        run: |
+          nohup python blobserver/main.py &  # Start your application server
+          sleep 5  # Wait for the server to start
+
+      - name: Create test user
+        run: |
+          python blobserver/cli.py create-user --username test1 --password test12345 --email test@test.com  # Create a test user
+
+      - name: Get access key for test user
+        id: get_access_key
+        run: |
+          access_key=$(python blobserver/cli.py get-access-key --username test1)
+          echo "access_key=$access_key" >> $GITHUB_ENV
+
+      - name: Update settings.json with access key
+        run: |
+          jq --arg access_key "$access_key" '.ACCESSKEY = $access_key' tests/settings.json > tmp.json && mv tmp.json tests/settings.json
+          jq --arg access_key "$access_key" '.ACCESSKEY = $access_key' site/settings.json > tmp.json && mv tmp.json site/settings.json
+          cat tests/settings.json
+
+      - name: Run tests
+        run: |
+          pytest tests  # Run only the specified test file 
