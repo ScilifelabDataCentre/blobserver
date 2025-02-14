@@ -60,7 +60,7 @@ def test_user_blobs(settings, page):
     login_user(settings, page)
 
     # Check number of blobs owned by the user.
-    page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     locator = page.locator(".blobserver-blobinfo > a")
     count = locator.count()
@@ -72,7 +72,7 @@ def test_user_blobs(settings, page):
     assert response.status_code == http.client.NOT_FOUND
 
     # Create a new blob.
-    page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     page.click("#upload")
     assert page.url == f"{settings['BASE_URL']}/blob/"
@@ -88,7 +88,7 @@ def test_user_blobs(settings, page):
     assert page.locator("#description").inner_text() == description
 
     # Check increase in number of blobs.
-    page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     locator = page.locator(".blobserver-blobinfo > a")
     assert locator.count() == count + 1
@@ -120,7 +120,7 @@ def test_user_blobs(settings, page):
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
 
     # Check same number of blobs as before.
-    page.click("text=My blobs")
+    page.click("#top_navbar >> a.nav-link:has-text('My blobs')")
     assert page.url == f"{settings['BASE_URL']}/blobs/user/{settings['USERNAME']}"
     locator = page.locator(".blobserver-blobinfo > a")
     assert locator.count() == count
